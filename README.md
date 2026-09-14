@@ -2,6 +2,10 @@
 
 This repository contains Group 17's BT4222 project on developing and evaluating recommender systems using the JD Search dataset.
 
+New group members should follow [ONBOARDING.md](ONBOARDING.md).
+
+Meaningful AI-assisted technical decisions are recorded concisely in [AI_LOG.md](AI_LOG.md).
+
 ## Project status
 
 Initial project setup.
