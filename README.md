@@ -57,6 +57,8 @@ python -m pip install -r requirements.txt
 
 In VS Code, select `.venv` as the notebook kernel.
 
+In Google Colab, select the `2026.07` runtime. The required libraries are already installed in that runtime, so `requirements.txt` is only used for local setup.
+
 ## Notebooks
 
-- `00_setup_and_data_access.ipynb`: mounts Google Drive and verifies the environment and dataset paths.
+- `00_setup_and_data_access.ipynb`: locates the dataset and verifies the local or Colab environment.
