@@ -6,6 +6,10 @@ __pycache__/
 # Jupyter temporary files
 .ipynb_checkpoints/
 
+# Local datasets
+/data/*
+!/data/.gitkeep
+
 # Secrets and local configuration
 .env
 
