@@ -1,0 +1,18 @@
+[project]
+name = "jdsearch"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12.10,<3.13"
+dependencies = [
+    "ipykernel==6.17.1",
+    "joblib==1.5.3",
+    "matplotlib==3.10.0",
+    "numpy==2.0.2",
+    "pandas==2.2.2",
+    "pyarrow==18.1.0",
+    "scikit-learn==1.6.1",
+    "seaborn==0.13.2",
+    "torch==2.11.0",
+    "tqdm==4.67.3",
+]

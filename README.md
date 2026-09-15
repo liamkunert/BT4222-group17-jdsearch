@@ -33,34 +33,27 @@ The `data/` folder contents are ignored by Git. For Colab, add the shared `BT422
 
 ## Environment
 
-The project uses Python 3.12:
+The project uses Python 3.12 and [uv](https://docs.astral.sh/uv/) for Python and dependency management.
 
-- Python 3.12.10 for local development
-- Python 3.12.13 in the Google Colab 2026.07 runtime
-- Package versions listed in `requirements.txt`
+The local Python version is pinned in `.python-version`, while project dependencies and their resolved versions are defined by `pyproject.toml` and `uv.lock`.
 
-To set up the project locally, install Python 3.12 and create a virtual environment.
+### Local setup
 
-Windows PowerShell:
+Install `uv` by following the [official installation instructions](https://docs.astral.sh/uv/getting-started/installation/).
 
-```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-```
-
-macOS or Linux:
+Then, from the repository root:
 
 ```bash
-python3.12 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
+uv python install
+uv sync
 ```
 
-In VS Code, select `.venv` as the notebook kernel.
+`uv python install` installs the Python version specified in `.python-version`, and `uv sync` creates the project's `.venv` and installs the locked dependencies.
 
-In Google Colab, select the `2026.07` runtime. The required libraries are already installed in that runtime, so `requirements.txt` is only used for local setup.
-
+PyCharm should automatically detect the .venv when running Jupyter notebooks.
+In VS Code, select the project's `.venv` as the notebook kernel.
 ## Notebooks
 
 - `00_setup_and_data_access.ipynb`: locates the dataset and verifies the local or Colab environment.
+
+
