@@ -17,7 +17,7 @@ notebooks/
   02_interim_report.ipynb        Main exploration and report evidence
   diagnostics/                  Supporting query and history experiments
 scripts/                        Three reusable analysis modules
-reports/interim/                Written findings and notebook status
+reports/interim/                Written findings, notebook status and report draft
 outputs/interim/                Generated tables and figures (ignored by Git)
 data/                           Raw data and temporary arrays (ignored by Git)
 ```
