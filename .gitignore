@@ -18,3 +18,9 @@ __pycache__/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Regenerable notebook tables, diagnostic exports and figures
+/outputs/
+
+# Office lock files (created while a document is open)
+~$*
