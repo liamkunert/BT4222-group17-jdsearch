@@ -6,23 +6,29 @@ Meaningful AI-assisted technical decisions are recorded concisely in [AI_LOG.md]
 
 ## Project status
 
-Interim data exploration and problem framing. Model architecture and training choices remain open.
+Data understanding is complete and the interim report is drafted. Next: preprocessing, baselines and models. The leading modelling hypothesis (session-aware personalisation) and all exploration results are in [docs/FINDINGS.md](docs/FINDINGS.md).
 
 ## Repository structure
 
 ```text
-PROJECT_PLAN.md                 Current project direction and next steps
+README.md                        This file: setup and pipeline map
+PROJECT_PLAN.md                  Project direction, decisions and timeline
+AI_LOG.md                        AI interaction log (required in the final report)
+docs/
+  FINDINGS.md                    What exploration established and what it means for the pipeline
+  dataset-specific-insights.md   The lecturer's dataset hints
+  guidelines/                    Course guidelines (interim report, final deliverables)
+  interim/                       Interim report draft
 notebooks/
   00_setup_and_data_access.ipynb Environment and data checks
-  02_interim_report.ipynb        Main exploration and report evidence
-  diagnostics/                  Supporting query and history experiments
-scripts/                        Three reusable analysis modules
-reports/interim/                Written findings, notebook status and report draft
-outputs/interim/                Generated tables and figures (ignored by Git)
-data/                           Raw data and temporary arrays (ignored by Git)
+  01_data_understanding.ipynb    Full-data summaries, feature dictionary, interim report evidence
+  exploration/                   Supporting analyses, not part of the pipeline (see its README)
+scripts/                         Analysis modules used by the notebooks
+outputs/interim/                 Generated tables and figures (ignored by Git)
+data/                            Raw data and temporary arrays (ignored by Git)
 ```
 
-Start with `notebooks/02_interim_report.ipynb`. You do not need to browse individual CSVs to follow the analysis; the notebook displays the relevant tables. `PROJECT_PLAN.md` explains the direction, and `reports/interim/NOTEBOOK_STATUS.md` records what is complete and what remains.
+Pipeline notebooks are numbered by stage (`00_`, `01_`, ...); preprocessing, baselines, models and diagnostics will follow as `02_` onwards. Start with `docs/FINDINGS.md` for the results, or `notebooks/01_data_understanding.ipynb` for the full exploration; the notebook displays the relevant tables, so there is no need to browse individual CSVs.
 
 The project will be developed locally and periodically tested in Google Colab. The JD Search dataset must not be committed to GitHub.
 
@@ -61,21 +67,19 @@ uv sync
 
 PyCharm should automatically detect the .venv when running Jupyter notebooks.
 In VS Code, select the project's `.venv` as the notebook kernel.
+
 ## Notebooks
 
 - `00_setup_and_data_access.ipynb`: locates the dataset and verifies the local or Colab environment.
-- `02_interim_report.ipynb`: consolidated raw-data summaries, feature dictionary, statistics and report figures. Raw summaries use the full files; engineered features use 5,000 uniformly sampled whole records, seed 4222.
-- `diagnostics/03_query_signal_validation.ipynb`: supporting query-token, query/title and current/history-query checks.
-- `diagnostics/04_history_match_validation.ipynb`: supporting product, brand, shop and four-level category-path matches, split by recorded-query presence.
+- `01_data_understanding.ipynb`: consolidated raw-data summaries, feature dictionary, statistics and report figures. Raw summaries use the full files; engineered features use 5,000 uniformly sampled whole records, seed 4222.
+- `exploration/`: query and history validation notebooks, the session-context check and the first team EDA. Their purpose and run order are in [notebooks/exploration/README.md](notebooks/exploration/README.md).
 
-The notebooks use helpers in `scripts/`. In Colab, provide the complete repository checkout, including that folder, in the runtime and open it as the working directory; the mounted Drive folder supplies the raw data. For a fresh set of detailed diagnostics, run 03 and 04 before 02. Notebook 02 checks saved diagnostics against its newly recomputed sample features; its core exploration also runs when diagnostic tables are absent.
+The notebooks use helpers in `scripts/`. In Colab, provide the complete repository checkout, including that folder, in the runtime and open it as the working directory; the mounted Drive folder supplies the raw data. For a fresh set of detailed diagnostics, run the two validation notebooks in `exploration/` before `01_data_understanding.ipynb`, which checks their saved tables against its newly recomputed sample features; its core exploration also runs when those tables are absent.
 
 ## Generated outputs and reusable code
 
 `outputs/interim/tables/` contains regenerated CSV statistics and diagnostic JSON summaries; `outputs/interim/figures/` contains exported PNG charts. All of `outputs/` is ignored by Git, so these files do not clutter source changes. Current results also remain displayed in the executed notebooks. A fresh checkout needs the raw data and the notebook run order above to regenerate the detailed exports. Keep selected figures with the report if needed for submission.
 
-The three files in `scripts/` are source code, not disposable outputs: `interim_eda.py` supports the main exploration, `query_diagnostics.py` supports query checks, and `history_match_diagnostics.py` supports history/category checks. The main notebook also reuses their validated matching functions.
+The files in `scripts/` are source code, not disposable outputs: `interim_eda.py` supports the main exploration, `query_diagnostics.py` supports query checks, `history_match_diagnostics.py` supports history/category checks, and `signal_check_figure.py` redraws the interim report's Figure 5. The main notebook also reuses their validated matching functions.
 
 Temporary population counts and record samples go under ignored `data/processed/`. The full-data popularity/cold flags are descriptive EDA features; future model versions must calculate population statistics from training records only.
-
-
