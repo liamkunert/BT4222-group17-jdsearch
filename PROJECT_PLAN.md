@@ -8,7 +8,7 @@ Evidence and detailed results are in [docs/FINDINGS.md](docs/FINDINGS.md); this 
 
 ## 1. One-paragraph summary
 
-Re-rank the products JD returned for a search using the current query, the shopper's history and candidate metadata. The business decision is **how much past behaviour should influence the current ranking, and which parts of that history to trust**. Our leading hypothesis is that the answer depends on whether the search continues an ongoing shopping session: history is far more useful minutes after the last action than days later (FINDINGS §6). The target is the observed interaction grade (0-3), evaluated on full, un-downsampled candidate lists.
+Re-rank the products JD returned for a search using the current query, the shopper's history and candidate metadata. The business decision is **how much past behaviour should influence the current ranking, and which parts of that history to trust**. One promising lead from a quick check: history seems more useful shortly after the last action and when past queries overlap the current one (FINDINGS §6). The target is the observed interaction grade (0-3), evaluated on full, un-downsampled candidate lists.
 
 ## 2. Business objective and ML task (fixed at the interim)
 
@@ -38,8 +38,9 @@ Pitfalls and rules (file order leaks labels, missing metadata, category IDs with
 
 ## 4. Direction and contribution
 
-- **Table stakes: the prior baseline.** Every group has Team 3's code and will find its flaws. We reproduce and correct it under our protocol, but it is not our headline. Diagnosis in FINDINGS §5; note that their pipeline drops exactly the gap to the search that our hypothesis relies on.
-- **Headline: session-aware personalisation** (FINDINGS §6). Learn how strongly history shapes the ranking depending on session context: time since the last action, overlap with recent queries, history length, query-linked vs query-less history. Checks owed before relying on it: history strictly precedes the search; exclude exact re-finds; larger sample; test inside trained models.
+- **Table stakes: the prior baseline.** Every group has Team 3's code and will find its flaws. We reproduce and correct it under our protocol, but it is not our main contribution. Diagnosis in FINDINGS §5; note that their pipeline drops the gap to the search, one of the context signals we test.
+- **Main question** (as in the interim report): which history signals improve the ranking, and does weighting history by its relevance to the query beat using all of it or filtering it?
+- **Context signals to investigate** (FINDINGS §6): a quick untrained check suggests history helps more shortly after the last action and when past queries overlap the current one; history length and query-linked vs query-less history may also matter. Checks owed before relying on it: history strictly precedes the search; exclude exact re-finds; larger sample; test inside trained models.
 - **Supporting components:** query-title relevance (BM25 or term-ID embeddings), metadata features for cold candidates, full category paths, query-less history as its own source.
 - **Possible side analysis:** repurchase vs "already bought" by category (FINDINGS §7).
 - **Novelty framing:** query-aware and adaptive personalisation already exist (the JDsearch paper benchmarks such models). Our contribution is a corrected evaluation of the prior baseline plus controlled, interpretable evidence on when and how strongly history should shape search.
@@ -50,7 +51,7 @@ Pipeline notebooks continue the numbering in `notebooks/`:
 
 1. **`02_preprocessing`:** grouped train/validation/test split; training-only population features; session features from time gaps (time since last action, session boundaries, in-session actions, repeated queries); history-match features (FINDINGS §4); text relevance.
 2. **`03_baselines`:** random order, popularity, one-signal rules, and Team 3's model re-evaluated (including the random-baseline simulation on their downsampled lists).
-3. **`04_models`:** a feature-based learning-to-rank model; then a model combining relevance, short-term and long-term history with a context-dependent weighting. Compare models with the same inputs.
+3. **`04_models`:** a no-history reference (query–product match, candidate metadata, training-set popularity) that isolates what personalisation adds; a feature-based learning-to-rank model with history; then a model combining relevance, short-term and long-term history with a context-dependent weighting. Compare models with the same inputs.
 4. **`05_diagnostics`:** NDCG by segment (time since last action, cold vs warm candidates, history length, query overlap), learned weights, and business insights.
 
 ## 6. Sampling and scaling
@@ -76,7 +77,7 @@ Pipeline notebooks continue the numbering in `notebooks/`:
 | 4 Oct | Submit interim report by 11:59 PM |
 | Week 7 | Preprocessing and baselines; TA checkpoint |
 | 12 Oct | Midterm (Weeks 1-8) |
-| Mid Oct | Main models and evaluation; session-aware checks |
+| Mid Oct | Main models and evaluation; context-signal checks |
 | Week 11 | Final consultation with the lecturer |
 | 9 Nov | Code and data artefacts on GitHub; PDF with links on Canvas |
 | 10-11 Nov | Report, slides, presentation; peer evaluation |

@@ -6,7 +6,7 @@ Meaningful AI-assisted technical decisions are recorded concisely in [AI_LOG.md]
 
 ## Project status
 
-Data understanding is complete and the interim report is drafted. Next: preprocessing, baselines and models. The leading modelling hypothesis (session-aware personalisation) and all exploration results are in [docs/FINDINGS.md](docs/FINDINGS.md).
+Data understanding is complete and the interim report is drafted. Next: preprocessing, baselines and models. All exploration results, including a promising lead on search context (time since the last action), are in [docs/FINDINGS.md](docs/FINDINGS.md).
 
 ## Repository structure
 

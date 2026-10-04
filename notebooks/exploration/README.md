@@ -6,7 +6,7 @@ Supporting analyses from the data-understanding phase. They are **not part of th
 |---|---|---|
 | `query_signal_validation.ipynb` | Query tokenisation, query-title overlap, current vs past query overlap, hard query filter on history | Executed; feeds interim §2.4 and FINDINGS §4 |
 | `history_match_validation.ipynb` | Product, brand, shop and category-path matches against history, split by search-linked vs query-less history | Executed; feeds interim §2.4 and FINDINGS §4 |
-| `session_context_check.ipynb` | How time since the last action, past-query overlap, query length and history length change the value of history | Executed; evidence for the session-aware hypothesis (FINDINGS §6) |
+| `session_context_check.ipynb` | How time since the last action, past-query overlap, query length and history length change the value of history | Executed; promising lead on search context (FINDINGS §6) |
 | `early_eda.ipynb` | The team's first exploratory pass over the raw files | Superseded by `01_data_understanding.ipynb`; kept for reference |
 
 ## Run order

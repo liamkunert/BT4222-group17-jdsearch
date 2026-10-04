@@ -76,7 +76,7 @@ Validation behind these numbers: parser assertions (substrings, short IDs, place
 
 ## 5. Prior baseline: Team 3 diagnosis
 
-Reviewed 4 October 2026 from [their repository](https://github.com/myathetchai/bt4222-team3-jdsearch). Every group has this code, so fixing it is table stakes (final rubric aspect 2), not our headline.
+Reviewed 4 October 2026 from [their repository](https://github.com/myathetchai/bt4222-team3-jdsearch). Every group has this code, so fixing it is table stakes (final rubric aspect 2), not our main contribution.
 
 **Evaluation**
 
@@ -89,7 +89,7 @@ Reviewed 4 October 2026 from [their repository](https://github.com/myathetchai/b
 **Data pipeline**
 
 - **History gutted** (`1. Sampling.ipynb`, `2. Data Preprocessing.ipynb`): the catalogue is cut to products in the downsampled candidate lists, then history items outside it are deleted. Mean history drops from 153.4 to 65.7 actions; 4,515 users end up with none. Engaged candidates are always kept but only a few ignored ones are, so a user's history mostly retains products they later engaged with: label-dependent filtering of inputs.
-- **Time gaps corrupted**: the history filter zips the time list (one element longer) with the other lists, silently dropping the final gap from the last action to the search. `3. Merged Feature Engineering.ipynb` then drops another element, assuming it is that gap, and the time-decay feature drops the most recent action type. **This removes the signal that section 6 finds most important.**
+- **Time gaps corrupted**: the history filter zips the time list (one element longer) with the other lists, silently dropping the final gap from the last action to the search. `3. Merged Feature Engineering.ipynb` then drops another element, assuming it is that gap, and the time-decay feature drops the most recent action type. **This removes the gap to the search, one of the context signals in section 6.**
 - **Positive-first list order** is kept and never shuffled, so tied scores can sort by label.
 
 **Model**
@@ -103,9 +103,9 @@ Reviewed 4 October 2026 from [their repository](https://github.com/myathetchai/b
 - **Row-level split** (3.2): `train_test_split` on flattened (user, candidate) rows puts one user's candidates in train, validation and test.
 - **Scaler and KMeans fitted on all users** before the split (minor).
 
-## 6. Leading modelling hypothesis: session-aware personalisation
+## 6. Promising lead: history's value depends on search context
 
-**Claim.** The value of a shopper's history depends on whether the search continues an ongoing shopping session. Mid-session, history (especially recent and query-related history) should strongly shape the ranking; for a shopper returning after days, ranking should rely more on query relevance and popularity. This sharpens our business question ("how much should past behaviour shape search?") without changing the task or target.
+**Lead** (from a quick untrained check, not yet a central claim). The value of a shopper's history may depend on whether the search continues an ongoing shopping session. Mid-session, history (especially recent and query-related history) should strongly shape the ranking; for a shopper returning after days, ranking should rely more on query relevance and popularity. This sharpens our business question ("how much should past behaviour shape search?") without changing the task or target.
 
 **Evidence** (`notebooks/exploration/session_context_check.ipynb`; gain = NDCG@10 minus random):
 
