@@ -6,7 +6,7 @@ Meaningful AI-assisted technical decisions are recorded concisely in [AI_LOG.md]
 
 ## Project status
 
-Data understanding is complete and the interim report is drafted. Next: preprocessing, baselines and models. All exploration results, including a promising lead on search context (time since the last action), are in [docs/FINDINGS.md](docs/FINDINGS.md).
+Interim report submitted; modelling phase started. All exploration results are in [docs/FINDINGS.md](docs/FINDINGS.md), including the post-interim finding that each action type is only recorded within its own window (clicks 7 days, carts 90 days, orders 1 year). Every experiment from here on is recorded in [docs/EXPERIMENT_LOG.md](docs/EXPERIMENT_LOG.md).
 
 ## Repository structure
 
@@ -16,6 +16,7 @@ PROJECT_PLAN.md                  Project direction, decisions and timeline
 AI_LOG.md                        AI interaction log (required in the final report)
 docs/
   FINDINGS.md                    What exploration established and what it means for the pipeline
+  EXPERIMENT_LOG.md              Every post-interim experiment: question, setup, result, decision
   dataset-specific-insights.md   The lecturer's dataset hints
   guidelines/                    Course guidelines (interim report, final deliverables)
   interim/                       Interim report draft
@@ -24,7 +25,7 @@ notebooks/
   01_data_understanding.ipynb    Full-data summaries, feature dictionary, interim report evidence
   exploration/                   Supporting analyses, not part of the pipeline (see its README)
 scripts/                         Analysis modules used by the notebooks
-outputs/interim/                 Generated tables and figures (ignored by Git)
+outputs/                         Generated tables and figures by stage (ignored by Git)
 data/                            Raw data and temporary arrays (ignored by Git)
 ```
 
@@ -72,7 +73,9 @@ In VS Code, select the project's `.venv` as the notebook kernel.
 
 - `00_setup_and_data_access.ipynb`: locates the dataset and verifies the local or Colab environment.
 - `01_data_understanding.ipynb`: consolidated raw-data summaries, feature dictionary, statistics and report figures. Raw summaries use the full files; engineered features use 5,000 uniformly sampled whole records, seed 4222.
-- `exploration/`: query and history validation notebooks, the session-context check and the first team EDA. Their purpose and run order are in [notebooks/exploration/README.md](notebooks/exploration/README.md).
+- `exploration/`: query and history validation notebooks, the session-context check, the post-interim history timeline and the first team EDA. Their purpose and run order are in [notebooks/exploration/README.md](notebooks/exploration/README.md).
+
+**Working conventions (post-interim).** All analysis, modelling and evaluation code lives in Jupyter notebooks, executed with outputs saved, because the pipeline is run and submitted on Colab. Only a few functions shared by several notebooks (parsing, evaluation) live in `scripts/` and are imported. Every experiment gets an entry in [docs/EXPERIMENT_LOG.md](docs/EXPERIMENT_LOG.md); results that change what we believe also go into FINDINGS, and changes of direction into PROJECT_PLAN.
 
 The notebooks use helpers in `scripts/`. In Colab, provide the complete repository checkout, including that folder, in the runtime and open it as the working directory; the mounted Drive folder supplies the raw data. For a fresh set of detailed diagnostics, run the two validation notebooks in `exploration/` before `01_data_understanding.ipynb`, which checks their saved tables against its newly recomputed sample features; its core exploration also runs when those tables are absent.
 

@@ -9,9 +9,10 @@ What our exploration established, and what each result means for the pipeline. T
 | Product/brand/shop/category history matches, query-less history | `notebooks/exploration/history_match_validation.ipynb` |
 | How search context changes the value of history (section 6) | `notebooks/exploration/session_context_check.ipynb` |
 | Interim report Figure 5 | `scripts/signal_check_figure.py` |
+| Action types by days before the search (section 7) | `notebooks/exploration/history_timeline.ipynb` |
 | First team EDA (superseded, kept for reference) | `notebooks/exploration/early_eda.ipynb` |
 
-Last updated 4 October 2026.
+Last updated 19 October 2026 (section 7 added after the interim feedback).
 
 ## 1. Scope conventions
 
@@ -135,7 +136,33 @@ Reviewed 4 October 2026 from [their repository](https://github.com/myathetchai/b
 - Rerun on a larger sample; test the interaction inside trained models (a tree ranker with time-since-last-action may capture it without a custom architecture, in which case the contribution is the analysis).
 - Not new in the literature (short- vs long-term interest; adaptive personalisation such as ZAM); claim evidence and interpretability on real search data, not novelty of the idea.
 
-## 7. Parked ideas
+## 7. History is three censored windows, not one sequence (post-interim)
+
+Prompted by the interim feedback (clicks should outnumber carts 5-10:1 and carts outnumber orders 3-5:1, yet history shows the reverse). Evidence: `notebooks/exploration/history_timeline.ipynb` on the full data (26,667,260 actions), experiment E01 in [EXPERIMENT_LOG.md](EXPERIMENT_LOG.md). Elapsed days = sum of all gaps after an action, including the final gap to the search.
+
+| Action type | Actions | Recorded up to | Window |
+|---|---:|---:|---|
+| CLICK | 8,298,894 | 7 days (107 stragglers up to day 13) | short |
+| CART | 11,526,504 | 90 days (1,204 stragglers beyond) | medium |
+| FLW | 24,579 | 90 days | medium |
+| ORD | 6,817,283 | 365 days | long |
+
+| Window before search | Clicks | Carts | Orders | Clicks per cart | Carts per order |
+|---|---:|---:|---:|---:|---:|
+| 0-7 days | 8,298,787 | 1,335,157 | 202,822 | 6.2 | 6.6 |
+| 7-90 days | 107 | 10,190,143 | 1,833,103 | – | 5.6 |
+| 90-365 days | 0 | 1,203 | 4,781,358 | – | – |
+
+What this means:
+
+1. **The inverted funnel is a retention artefact.** Inside the 7-day window where all types are recorded, the funnel is normal (about 6 clicks per cart, 6-7 carts per order). The interim statement "carts outnumber clicks in history" (action mix 43/31/26) describes the logging policy, not behaviour.
+2. **Action type and age are confounded.** A click is always recent; an order is usually old. Any feature or model weight "per action type" also encodes age, and any recency feature also encodes type mix. Compare types only within a shared window.
+3. **"No clicks" mostly means "no activity in the last 7 days"**, not "a user who doesn't click": 28,184 records (16.2%) have no click at all; 71.6% of them had no action of any type in the last 7 days, the rest only carts or orders.
+4. **Re-check results that pooled the windows.** The context lead in section 6 (history helps more shortly after the last action): searches with more than 7 days since the last action have no clicks by construction, so part of the gradient may be the visible action types, not recency itself. Also affected: history-length effects, the query-less share (28% of clicks vs 51% of orders are search-linked), and same-product matches (a 7-day click is a re-find, a 6-month order is a repurchase).
+5. **Feature engineering follows the windows:** a short-term block (0-7 days, all types, the full funnel and recent queries), a medium-term block (7-90 days, carts and follows) and a long-term block (90-365 days, orders only), each with its own match features and recency measured from the search.
+6. **Minor:** carts dip around day 64 before the search (possible logging gap); orders show spikes (likely sales events). Not yet investigated.
+
+## 8. Parked ideas
 
 - **Repurchase vs "already bought"**: category-dependent effect of a past purchase (consumables vs durables). Crisp insight, but exact repeats cover only 0.79% of candidates and follows (FLW) are 0.09% of history. Good side analysis.
 - **Better text relevance**: BM25 and term-ID embeddings learned from titles and queries. Necessary relevance component; every group will build it; lexical gains are modest here.

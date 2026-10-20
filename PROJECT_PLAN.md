@@ -42,7 +42,7 @@ Pitfalls and rules (file order leaks labels, missing metadata, category IDs with
 - **Main question** (as in the interim report): which history signals improve the ranking, and does weighting history by its relevance to the query beat using all of it or filtering it?
 - **Context signals to investigate** (FINDINGS §6): a quick untrained check suggests history helps more shortly after the last action and when past queries overlap the current one; history length and query-linked vs query-less history may also matter. Checks owed before relying on it: history strictly precedes the search; exclude exact re-finds; larger sample; test inside trained models.
 - **Supporting components:** query-title relevance (BM25 or term-ID embeddings), metadata features for cold candidates, full category paths, query-less history as its own source.
-- **Possible side analysis:** repurchase vs "already bought" by category (FINDINGS §7).
+- **Possible side analysis:** repurchase vs "already bought" by category (FINDINGS §8).
 - **Novelty framing:** query-aware and adaptive personalisation already exist (the JDsearch paper benchmarks such models). Our contribution is a corrected evaluation of the prior baseline plus controlled, interpretable evidence on when and how strongly history should shape search.
 
 ## 5. Modelling plan (after the interim)
