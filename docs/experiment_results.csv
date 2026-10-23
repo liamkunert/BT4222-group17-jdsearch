@@ -1,0 +1,2 @@
+date,experiment,model,split,searches,ndcg_at_10,ndcg_ci_low,ndcg_ci_high,recall_at_10,mrr,commit,notes
+2026-10-20,E02,random order,validation,19772,0.08448,0.08304,0.08602,0.15988,0.10197,bc36467,all candidates tied; exact expectation over random order
