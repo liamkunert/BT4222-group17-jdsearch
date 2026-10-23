@@ -7,9 +7,9 @@ Protocol (PROJECT_PLAN sections 2 and 6, FINDINGS section 3):
   over a uniformly random order within each group of tied scores;
 - searches without an engaged candidate are excluded (every ordering scores the same).
 
-Main entry points: ``evaluate`` (per-search metrics), ``summarise`` (means with bootstrap intervals,
-optionally by segment), ``paired_difference`` (model A vs B on the same searches) and ``log_result``
-(appends one row to docs/experiment_results.csv).
+Main entry points: ``evaluate`` (per-search metrics; pass ``expected_sizes`` to check every list is complete),
+``summarise`` (means with bootstrap intervals, optionally by segment), ``paired_difference`` (model A vs B on
+exactly the same searches) and ``log_result`` (appends one row to docs/experiment_results.csv).
 """
 from datetime import date
 from pathlib import Path
@@ -69,8 +69,33 @@ def expected_metrics(scores, labels, k=K):
     return dcg / ideal, found / engaged.sum(), mrr
 
 
-def evaluate(frame, score_col="score", k=K):
-    """Per-search metrics for a long table with columns session_id, label and `score_col`."""
+def check_complete(frame, expected_sizes):
+    """Fail unless `frame` holds exactly the expected searches, each with its complete candidate list.
+
+    `expected_sizes` maps session_id -> number of candidates (e.g. the `n_candidates` column of the search
+    table). Guards against silently evaluating partial lists or a different set of searches.
+    """
+    sizes = frame.groupby("session_id").size()
+    expected = pd.Series(expected_sizes)
+    missing, extra = expected.index.difference(sizes.index), sizes.index.difference(expected.index)
+    if len(missing) or len(extra):
+        raise ValueError(f"{len(missing)} expected searches missing, {len(extra)} unexpected searches present")
+    wrong = (sizes.reindex(expected.index) != expected).sum()
+    if wrong:
+        raise ValueError(f"{wrong} searches have incomplete or extra candidates")
+
+
+def evaluate(frame, score_col="score", k=K, expected_sizes=None):
+    """Per-search metrics for a long table with columns session_id, label and `score_col`.
+
+    Pass `expected_sizes` (session_id -> list length) to check that every list is complete first.
+    """
+    if not frame.label.isin([0, 1, 2, 3]).all():
+        raise ValueError("Labels must be 0, 1, 2 or 3")
+    if not np.isfinite(frame[score_col].to_numpy(dtype=float)).all():
+        raise ValueError(f"Scores in {score_col!r} must be finite")
+    if expected_sizes is not None:
+        check_complete(frame, expected_sizes)
     frame = frame.sort_values("session_id", kind="stable")
     sessions = frame.session_id.to_numpy()
     scores, labels = frame[score_col].to_numpy(dtype=float), frame.label.to_numpy()
@@ -103,8 +128,10 @@ def summarise(per_search, by=None):
 
 
 def paired_difference(per_a, per_b, metric="ndcg"):
-    """Mean of A minus B over the same searches, with a bootstrap interval."""
-    a, b = per_a[metric].align(per_b[metric], join="inner")
+    """Mean of A minus B over the same searches, with a bootstrap interval; fails if the searches differ."""
+    if not per_a.index.sort_values().equals(per_b.index.sort_values()):
+        raise ValueError("Paired comparison needs exactly the same searches in both results")
+    a, b = per_a[metric].align(per_b[metric])
     return bootstrap_interval(a - b)
 
 

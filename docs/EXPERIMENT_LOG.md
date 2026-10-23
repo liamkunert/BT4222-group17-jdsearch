@@ -40,6 +40,7 @@ How the documentation fits together:
 - **Expectation (lecturer's hint):** clicks thin out further back in time.
 - **Setup:** `notebooks/exploration/history_timeline.ipynb`, full behaviour file (173,831 records, 26,667,260 actions); outputs in `outputs/eda/history_timeline/`.
 - **Result:** each type is only recorded within a fixed window: clicks 7 days, carts and follows 90 days, orders 365 days. Within 0-7 days the funnel is normal (6.2 clicks per cart, 6.6 carts per order). 16.2% of records have no click; 71.6% of these had no action at all in the last 7 days, the rest only carts or orders.
+- **Correction (E06):** call these action-specific observation windows of the published data (mechanism unknown), and the 0-7 day ratios plausible event ratios, not a validated funnel.
 - **Decision:** history is three censored windows, not one sequence. Build features per window; re-check the section 6 context lead and other pooled results under this lens. FINDINGS section 7 added; roadmap added to PROJECT_PLAN section 5 (20 Oct).
 
 ### E02 - Fixed split, shared evaluation and the random-order floor (2026-10-20, Liam)
@@ -56,6 +57,7 @@ How the documentation fits together:
 - **Expectation:** orders and carts are stronger evidence than clicks; older evidence is weaker.
 - **Setup:** `notebooks/exploration/window_recheck.ipynb`; 20,000 searches from the training dev subsample (seed 4222), 19,733 with an engaged candidate; single-signal rankings by matching-action counts per block (0-7 d CLICK/CART/ORD, 7-90 d CART/ORD, 90-365 d ORD) and level (product, shop, brand, L3 path); gain = NDCG@10 minus random.
 - **Result:** recent clicks give ~70% of the pooled total gain (product 0.068 vs 0.093). Within 0-7 days, clicks are at least as informative per evidence as carts/orders (product 0.32 vs 0.25/0.27). Broad evidence fades with age (brand from carts 0.064 to 0.032), exact-product evidence hardly (orders 0.27 to 0.24). Expectation on type not supported.
+- **Correction (E06):** "at least as informative per evidence" and "~70% of the gain" overstate: the blocks are compared on different subsets of searches (0-7 d orders vary in ~190 searches), and stand-alone gains are not a decomposition.
 - **Decision:** features per (window, type, level); age-aware weighting for broad matches. FINDINGS 7.1 added.
 
 ### E04 - Context lead with action types held fixed (2026-10-23, Liam)
@@ -64,12 +66,21 @@ How the documentation fits together:
 - **Expectation:** the gradient shrinks once clicks are removed; unclear whether it survives for old history.
 - **Setup:** same notebook and sample as E03; gains by time since the last action for pooled history, history without clicks, and carts/orders older than 7 days; bootstrap intervals for (< 10 min) minus (6 h - 7 d).
 - **Result:** same-product difference 0.126 [0.118, 0.135] pooled, 0.038 [0.032, 0.044] without clicks, 0.002 [-0.003, 0.007] for history older than 7 days (shop and brand alike). Shoppers inactive 7+ days gain less from old history (shop 0.022 vs 0.040-0.053), unexplained.
-- **Decision:** the lead is a recency-of-evidence effect, not a session-context effect. Weight evidence by its own age and type. FINDINGS 6 revised; PROJECT_PLAN 1 and 4 updated.
+- **Correction (E06):** the near-zero difference for old history combines higher coverage with lower conditional gain for recently active shoppers, so it does not rule out a context effect; the 7+ day drop is mainly less history (27 vs ~100 old actions).
+- **Decision:** a large part of the interim recency difference disappears without fresh evidence; whether context features add value is tested in trained models (with vs without time since last action). FINDINGS 6 revised; PROJECT_PLAN 1 and 4 updated.
 
 ### E05 - Leakage and re-find checks (2026-10-23, Liam)
 
 - **Question:** Does history contain the current search's own interactions? Do shop/brand matches help beyond re-finding the same product?
 - **Expectation:** no leakage; shop/brand keep part of their gain.
 - **Setup:** same notebook and sample; for candidates seen in history: recency of the latest action and whether it carried the current query; shop/brand counts excluding the candidate's own product.
-- **Result:** engaged candidates are in history far more often (9.4% vs 0.6%), but only 0.7% of recent (< 10 min) actions on them carry the current query, so they are not the current search's clicks. Without the candidate's own product, shop keeps 60% of its gain (0.052 of 0.088), brand 40%.
+- **Result:** engaged candidates are in history far more often (9.4% vs 0.6%), but only 0.7% of recent (< 10 min) actions on them carry the current query. **Correction (E06):** this is an indication, not proof (about half have no query; 1.45% among known queries); the dataset description is the stronger evidence. Without the candidate's own product, shop keeps 60% of its gain (0.052 of 0.088), brand 40%.
 - **Decision:** keep recent history; separate exact-product and other-product match features; report results with and without very recent same-product matches. FINDINGS 6 checks marked done.
+
+### E06 - Independent review of E01-E05 (2026-10-23, Liam)
+
+- **Question:** Do the conclusions of E01-E05 hold up under an independent critical review?
+- **Expectation:** the numbers hold; some interpretations may overreach.
+- **Setup:** a second LLM reviewed the repository files, recomputed saved results, checked the metrics against enumerated orderings and examined the E03-E05 sample. See AI_LOG for the interaction.
+- **Result:** metrics and numbers confirmed. Overreaching interpretations: E04 does not rule out session context (old history: coverage 11.4% vs 9.2%, conditional product gain 0.238 vs 0.274 for recently active vs 6 h - 7 d; the 7+ day group has 27 vs ~100 old actions); E03 "per evidence" comparisons use different search subsets; E05 query check is weak (1.45% among known queries; 0.83% with all actions within 10 minutes). Errors found: medium block omitted 7-90 d orders; LightGBM defaults to exponential label gains; evaluation lacked completeness checks; training must not see file order.
+- **Decision:** wording in FINDINGS 5-7 and E01/E03-E05 corrected; evaluation guardrails and candidate shuffling added (notebook 02, section 8); context, query overlap and repurchase become model ablations instead of further single-signal checks; `label_gain=[0,1,2,3]` required.

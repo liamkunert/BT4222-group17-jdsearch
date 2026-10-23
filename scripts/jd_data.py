@@ -71,14 +71,23 @@ def load_metadata(path, wids):
     return metadata
 
 
-def load_candidates(path, session_ids):
-    """Long table (session_id, wid, label) for the given searches; one row per candidate occurrence."""
+def load_candidates(path, session_ids, shuffle_seed=EXPLORED_SEED):
+    """Long table (session_id, wid, label) for the given searches; one row per candidate occurrence.
+
+    Candidates are shuffled within each search (seeded), because the file stores engaged candidates first:
+    a model must never see that order, not even through row order during training. Pass
+    ``shuffle_seed=None`` to keep file order (only for checks).
+    """
     selected = set(np.asarray(session_ids).tolist())
+    rng = None if shuffle_seed is None else np.random.default_rng(shuffle_seed)
     parts = []
     for session_id, fields in iter_records(path):
         if session_id in selected:
-            wids = fields[1].split("_")
-            labels = [int(float(v)) for v in fields[2].split("_")]
+            wids = np.array(fields[1].split("_"))
+            labels = np.array([int(float(v)) for v in fields[2].split("_")])
+            if rng is not None:
+                order = rng.permutation(len(wids))
+                wids, labels = wids[order], labels[order]
             parts.append(pd.DataFrame({"session_id": session_id, "wid": wids, "label": labels}))
     frame = pd.concat(parts, ignore_index=True)
     frame["label"] = frame["label"].astype(np.int8)

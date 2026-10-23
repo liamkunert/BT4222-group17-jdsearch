@@ -7,7 +7,7 @@ Supporting analyses from the data-understanding phase. They are **not part of th
 | `query_signal_validation.ipynb` | Query tokenisation, query-title overlap, current vs past query overlap, hard query filter on history | Executed; feeds interim §2.4 and FINDINGS §4 |
 | `history_match_validation.ipynb` | Product, brand, shop and category-path matches against history, split by search-linked vs query-less history | Executed; feeds interim §2.4 and FINDINGS §4 |
 | `session_context_check.ipynb` | How time since the last action, past-query overlap, query length and history length change the value of history | Executed; promising lead on search context (FINDINGS §6) |
-| `history_timeline.ipynb` | Post-interim: action types by days before the search (retention windows: clicks 7 d, carts 90 d, orders 1 y) | Executed; experiment E01, FINDINGS section 7 |
+| `history_timeline.ipynb` | Post-interim: action types by days before the search (observation windows: clicks 7 d, carts 90 d, orders 1 y) | Executed; experiment E01, FINDINGS section 7 |
 | `window_recheck.ipynb` | Post-interim: signal by window and action type, context lead with types held fixed, leakage and re-finds (training dev subsample only) | Executed; experiments E03-E05, FINDINGS sections 6 and 7.1 |
 | `early_eda.ipynb` | The team's first exploratory pass over the raw files | Superseded by `01_data_understanding.ipynb`; kept for reference |
 

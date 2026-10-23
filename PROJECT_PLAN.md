@@ -8,7 +8,7 @@ Evidence and detailed results are in [docs/FINDINGS.md](docs/FINDINGS.md), every
 
 ## 1. One-paragraph summary
 
-Re-rank the products JD returned for a search using the current query, the shopper's history and candidate metadata. The business decision is **how much past behaviour should influence the current ranking, and which parts of that history to trust**. Since the interim we know that history consists of three windows with different retention (clicks 7 days, carts and follows 90 days, orders 365 days; FINDINGS §7). Re-checked under those windows, the interim lead (history helps more right after the last action) turned out to be a recency-of-evidence effect: fresh evidence is the strongest, while old history is equally useful in or out of a session (FINDINGS §6-7.1). Past-query overlap remains a candidate moderator. The target is the observed interaction grade (0-3), evaluated on full, un-downsampled candidate lists.
+Re-rank the products JD returned for a search using the current query, the shopper's history and candidate metadata. The business decision is **how much past behaviour should influence the current ranking, and which parts of that history to trust**. Since the interim we know that history has action-specific observation windows (clicks 7 days, carts and follows 90 days, orders 365 days; FINDINGS §7). Re-checked under those windows, a large part of the interim lead (history helps more right after the last action) disappears when fresh evidence is removed; whether session context adds value beyond fresh evidence is open and will be tested in trained models (FINDINGS §6-7.1). Past-query overlap remains a candidate moderator. The target is the observed interaction grade (0-3), evaluated on full, un-downsampled candidate lists.
 
 ## 2. Business objective and ML task (fixed at the interim)
 
@@ -40,7 +40,7 @@ Pitfalls and rules (file order leaks labels, missing metadata, category IDs with
 
 - **Table stakes: the prior baseline.** Every group has Team 3's code and will find its flaws. We reproduce and correct it under our protocol, but it is not our main contribution. Diagnosis in FINDINGS §5; note that their pipeline drops the gap to the search, one of the context signals we test.
 - **Main question** (as in the interim report): which history signals improve the ranking, and does weighting history by its relevance to the query beat using all of it or filtering it?
-- **How history should be weighted** (FINDINGS §6-7.1, re-checked 23 Oct): the value of evidence depends on its own age, type and level (broad brand/shop/category evidence fades with age, exact-product evidence hardly), not on whether the search continues a session. No sign of leakage; shop and brand generalise beyond re-finds. Still open: past-query overlap as a moderator, history length, query-linked vs query-less history, and testing all of this inside trained models.
+- **How history should be weighted** (FINDINGS §6-7.1, re-checked 23 Oct, reviewed in E06): single-signal checks suggest the value of evidence depends on its age, type and level (broad brand/shop/category evidence weaker when old, exact-product evidence much less so). No sign of leakage (not proof); shop and brand evidence from other products helps. Tested next **as model ablations** on the same split: (1) time since last action and its interactions (session context), (2) query overlap between current query and history, (3) past orders by age and category (repurchase), (4) coverage of matching history (exact product, only shop/brand, none), (5) query-linked vs query-less history.
 - **Supporting components:** query-title relevance (BM25 or term-ID embeddings), metadata features for cold candidates, full category paths, query-less history as its own source.
 - **Possible side analysis:** repurchase vs "already bought" by category (FINDINGS §8).
 - **Novelty framing:** query-aware and adaptive personalisation already exist (the JDsearch paper benchmarks such models). Our contribution is a corrected evaluation of the prior baseline plus controlled, interpretable evidence on when and how strongly history should shape search.
@@ -50,21 +50,23 @@ Pitfalls and rules (file order leaks labels, missing metadata, category IDs with
 Pipeline notebooks continue the numbering in `notebooks/`. Each step ends with entries in the experiment log; steps are revisited as results come in.
 
 0. **`02_split_and_evaluation` (foundation):** one fixed split by whole search record, the shared evaluation function (`scripts/evaluation.py`: NDCG@10, Recall@10, MRR, exact under random ties, by segment) and the results registry (`docs/experiment_results.csv`). Every later result uses both.
-1. **Re-checks under the window lens** (done 23 Oct, `exploration/window_recheck.ipynb`, E03-E05): history-match signals by action type and window; the context lead with the visible action types held fixed (revised: recency-of-evidence effect); leakage and re-find checks (passed).
-2. **`03_features`:** window-aligned history features (short 0-7 days: all types and recent queries; medium 7-90 days: carts and follows; long 90-365 days: orders), recency measured from the search, query-title relevance (BM25), training-only popularity, metadata for cold candidates.
+1. **Re-checks under the window lens** (done 23 Oct, `exploration/window_recheck.ipynb`, E03-E05; reviewed in E06): history-match signals by action type and window; the context lead with action types held fixed (largely explained by fresh evidence; context value open); leakage indications and re-find checks.
+2. **`03_features`:** window-aligned history features (short 0-7 days: all types and recent queries; medium 7-90 days: carts, follows and orders; long 90-365 days: orders), exact-product vs other-product matches, recency measured from the search, time since last action, query-title relevance (BM25), training-only popularity, metadata for cold candidates.
 3. **`04_baselines`:** random order, popularity, BM25, one-signal rules, and Team 3's model re-evaluated under our protocol (including the random-order simulation on their downsampled lists).
-4. **`05_models`:** a LightGBM ranker (LambdaRank) built up step by step with the same split: no history, then pooled history (Team 3-like), then window-aligned features, then query-weighted history. Then a neural model with one encoder per window and a learned weighting by evidence age, type and query relevance, compared on the same inputs.
+4. **`05_models`:** a LightGBM ranker (LambdaRank, **`label_gain=[0,1,2,3]`** to match our linear gains; LightGBM's default is exponential) built up step by step with the same split and paired comparisons on the same searches: no personal history (strong non-personalised reference), then pooled history, then window-aligned features, then context and query-overlap interactions. Robustness: retrain with history from at least 1 min / 10 min / 1 h before the search. Then a compact neural model: shared product and metadata representations with type and age information and masked pooling per window; separate encoders or attention only if time allows.
 5. **`06_diagnostics`:** NDCG by segment (activity in the last 7 days or not, cold vs warm candidates, history length, query overlap), feature importance and learned window weights, business insights.
 
 ## 6. Sampling and splits (decided 20 Oct 2026)
 
 - Unit: whole search records; keep all candidates and history; look up metadata in the full catalogue.
-- **Test:** 20,000 records, drawn only from records outside the 5,000 explored at the interim (seed 4222), untouched until the final models.
+- **Test:** 20,000 records, drawn only from records outside the 5,000 explored at the interim (seed 4222); no model is tuned or selected on test labels, and only the pre-selected final models are evaluated on it. Full-data descriptions (E01, split profiles) did include these records; the report states this.
 - **Validation:** 20,000 records, also outside the explored records; used for all model comparisons.
 - **Training:** the remaining 133,831 records, including the 5,000 explored ones. A fixed 40,000-record development subsample keeps experiments quick; final models train on all training records.
 - Searches without an engaged candidate stay in their split but are excluded from evaluation and from ranking training (every ordering scores the same).
 - Population features from training records only; supervised aggregates out-of-fold. Split indices are regenerated deterministically by `02_split_and_evaluation` and saved under `data/processed/`.
 - A uniform split addresses our sampling choice, not the source's selection of active users' last searches.
+- Candidates are shuffled within each search (seeded) before any training, so file order (which encodes the label) can never reach a model.
+- Protocol difference to the source paper: the paper trains on historical search interactions and evaluates the last queries; we train and evaluate on last searches of different users. Published model scores are therefore not directly comparable.
 
 ## 7. Open decisions
 
