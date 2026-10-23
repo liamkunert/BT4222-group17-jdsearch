@@ -201,7 +201,24 @@ Same pattern for shop (0.080 / 0.030 / -0.004) and brand (0.043 / 0.017 / -0.001
 
 **Consequences for `03_features`:** match features per (window, type, level) instead of pooled counts; age information for broad matches (brand, shop, category); exact-product and other-product matches as separate features; keep time since last action as a context feature. Which features matter is decided by retrained group ablations, not by these single-signal rankings.
 
-## 8. Parked ideas
+## 8. Popularity is the strongest single signal (feature set v1, E07)
+
+Evidence: `notebooks/03_features.ipynb`, single-feature rankings on 40,000 **training** searches (popularity out-of-fold, so a search never sees its own labels).
+
+| Signal | NDCG@10 | Gain over random |
+|---|---:|---:|
+| Training exposures (how often the product was shown) | 0.311 | +0.227 |
+| Smoothed training engagement rate | 0.252 | +0.168 |
+| Pooled history, same product | 0.178 | +0.094 |
+| Recent clicks (0-7 d), same product | 0.152 | +0.069 |
+| Query-title Jaccard | 0.097 | +0.014 |
+| BM25 | 0.091 | +0.008 |
+
+1. **A strong non-personalised reference is essential.** Personal history must be judged by what it adds on top of popularity and relevance, not against random order.
+2. **Possible mechanism (untested):** products JD ranks highly for common queries appear in many lists and get engaged more, so exposure counts may partly recover JD's own ranking and position bias, which the file does not reveal. Check within identical queries before interpreting popularity as product appeal.
+3. **Lexical relevance is weak**, as in FINDINGS 4.5: JD's retrieval already returns lexically relevant products.
+
+## 9. Parked ideas
 
 - **Repurchase vs "already bought"**: category-dependent effect of a past purchase (consumables vs durables). Crisp insight, but exact repeats cover only 0.79% of candidates and follows (FLW) are 0.09% of history. Good side analysis.
 - **Better text relevance**: BM25 and term-ID embeddings learned from titles and queries. Necessary relevance component; every group will build it; lexical gains are modest here.

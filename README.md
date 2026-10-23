@@ -25,6 +25,7 @@ notebooks/
   00_setup_and_data_access.ipynb Environment and data checks
   01_data_understanding.ipynb    Full-data summaries, feature dictionary, interim report evidence
   02_split_and_evaluation.ipynb  Fixed train/validation/test split, shared evaluation, random-order floor
+  03_features.ipynb              Feature set v1: 68 features in groups G0-G6 per (search, candidate)
   exploration/                   Supporting analyses, not part of the pipeline (see its README)
 scripts/                         Analysis modules used by the notebooks
 outputs/                         Generated tables and figures by stage (ignored by Git)
@@ -76,6 +77,7 @@ In VS Code, select the project's `.venv` as the notebook kernel.
 - `00_setup_and_data_access.ipynb`: locates the dataset and verifies the local or Colab environment.
 - `01_data_understanding.ipynb`: consolidated raw-data summaries, feature dictionary, statistics and report figures. Raw summaries use the full files; engineered features use 5,000 uniformly sampled whole records, seed 4222.
 - `02_split_and_evaluation.ipynb`: builds the search table and the fixed split `split_v1` (saved under `data/processed/`), validates the shared evaluation function and logs the random-order floor on validation. Run it once before any later pipeline notebook.
+- `03_features.ipynb`: builds feature set v1 (68 features in groups G0-G6, popularity out-of-fold from training records only) for the training dev subsample and validation; writes `data/processed/features_v1_*.parquet`. About 20 minutes; needs notebook 02 first.
 - `exploration/`: query and history validation notebooks, the session-context check, the post-interim history timeline and the first team EDA. Their purpose and run order are in [notebooks/exploration/README.md](notebooks/exploration/README.md).
 
 **Working conventions (post-interim).** All analysis, modelling and evaluation code lives in Jupyter notebooks, executed with outputs saved, because the pipeline is run and submitted on Colab. Only a few functions shared by several notebooks (parsing, evaluation) live in `scripts/` and are imported. Every experiment gets an entry in [docs/EXPERIMENT_LOG.md](docs/EXPERIMENT_LOG.md); results that change what we believe also go into FINDINGS, and changes of direction into PROJECT_PLAN.
