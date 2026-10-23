@@ -53,6 +53,24 @@ def search_table(path):
         "n_flw", "actions_last_7d", "days_since_last_action"]).set_index("session_id")
 
 
+def load_metadata(path, wids):
+    """Catalogue rows for the given products: wid -> (brand, shop, cate_1, cate_2, cate_3, cate_4).
+
+    Same columns and missing-value rule as the interim validation (empty or -1 = None). Products without a
+    catalogue row are simply absent; use scripts.history_match_diagnostics.metadata_keys to match them.
+    """
+    wids, metadata = set(wids), {}
+    with Path(path).open(encoding="utf-8") as handle:
+        assert next(handle).split("\t", 1)[0] == "wid"
+        for line in handle:
+            wid = line.split("\t", 1)[0]
+            if wid in wids:
+                fields = line.rstrip("\r\n").split("\t")
+                metadata[wid] = tuple(int(fields[j]) if fields[j] not in ("", "-1") else None
+                                      for j in (2, 12, 4, 6, 8, 10))
+    return metadata
+
+
 def load_candidates(path, session_ids):
     """Long table (session_id, wid, label) for the given searches; one row per candidate occurrence."""
     selected = set(np.asarray(session_ids).tolist())

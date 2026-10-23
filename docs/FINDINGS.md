@@ -10,9 +10,10 @@ What our exploration established, and what each result means for the pipeline. T
 | How search context changes the value of history (section 6) | `notebooks/exploration/session_context_check.ipynb` |
 | Interim report Figure 5 | `scripts/signal_check_figure.py` |
 | Action types by days before the search (section 7) | `notebooks/exploration/history_timeline.ipynb` |
+| Signals by window and type, context lead re-check, leakage and re-finds (sections 6-7) | `notebooks/exploration/window_recheck.ipynb` |
 | First team EDA (superseded, kept for reference) | `notebooks/exploration/early_eda.ipynb` |
 
-Last updated 19 October 2026 (section 7 added after the interim feedback).
+Last updated 23 October 2026 (section 7 added after the interim feedback; section 6 revised by the window re-check).
 
 ## 1. Scope conventions
 
@@ -104,7 +105,9 @@ Reviewed 4 October 2026 from [their repository](https://github.com/myathetchai/b
 - **Row-level split** (3.2): `train_test_split` on flattened (user, candidate) rows puts one user's candidates in train, validation and test.
 - **Scaler and KMeans fitted on all users** before the split (minor).
 
-## 6. Promising lead: history's value depends on search context
+## 6. Promising lead: history's value depends on search context (revised 23 Oct)
+
+> **Revised by the window re-check (E04, section 7.1):** the gradient below is mostly a **recency-of-evidence** effect. History older than 7 days is equally useful whether the last action was minutes or days ago (difference about 0); without clicks the gradient shrinks by about 70%. Searches right after activity gain more because fresh evidence (recent clicks and carts) is available, not because the session context makes old history more useful. The past-query-overlap moderator below has not been re-checked yet.
 
 **Lead** (from a quick untrained check, not yet a central claim). The value of a shopper's history may depend on whether the search continues an ongoing shopping session. Mid-session, history (especially recent and query-related history) should strongly shape the ranking; for a shopper returning after days, ranking should rely more on query relevance and popularity. This sharpens our business question ("how much should past behaviour shape search?") without changing the task or target.
 
@@ -131,9 +134,9 @@ Reviewed 4 October 2026 from [their repository](https://github.com/myathetchai/b
 **Caveats and checks owed**
 
 - Untrained single-signal rankings on a 4,941-search sample; segments are correlated, effects are not causal.
-- Confirm that history strictly precedes the search (no leakage from the final search's own interactions).
-- Exclude exact re-finds of products interacted with minutes earlier and check that shop/brand gains remain.
-- Rerun on a larger sample; test the interaction inside trained models (a tree ranker with time-since-last-action may capture it without a custom architecture, in which case the contribution is the analysis).
+- ~~Confirm that history strictly precedes the search~~: no sign of leakage (E05a, section 7.1).
+- ~~Exclude exact re-finds and check that shop/brand gains remain~~: they remain (E05b, section 7.1).
+- ~~Rerun on a larger sample~~: done on 19,733 training searches (E04), with the revision above; test the interaction inside trained models (a tree ranker with time-since-last-action may capture it without a custom architecture, in which case the contribution is the analysis).
 - Not new in the literature (short- vs long-term interest; adaptive personalisation such as ZAM); claim evidence and interpretability on real search data, not novelty of the idea.
 
 ## 7. History is three censored windows, not one sequence (post-interim)
@@ -161,6 +164,42 @@ What this means:
 4. **Re-check results that pooled the windows.** The context lead in section 6 (history helps more shortly after the last action): searches with more than 7 days since the last action have no clicks by construction, so part of the gradient may be the visible action types, not recency itself. Also affected: history-length effects, the query-less share (28% of clicks vs 51% of orders are search-linked), and same-product matches (a 7-day click is a re-find, a 6-month order is a repurchase).
 5. **Feature engineering follows the windows:** a short-term block (0-7 days, all types, the full funnel and recent queries), a medium-term block (7-90 days, carts and follows) and a long-term block (90-365 days, orders only), each with its own match features and recency measured from the search.
 6. **Minor:** carts dip around day 64 before the search (possible logging gap); orders show spikes (likely sales events). Not yet investigated.
+
+### 7.1 Re-check under the windows (E03-E05)
+
+Evidence: `notebooks/exploration/window_recheck.ipynb`, 19,733 searches with an engaged candidate from the training dev subsample (validation and test untouched). Gain = single-signal NDCG@10 minus random, exact under random ties; untrained associations.
+
+**E03: signal by window and type** (gain where the signal varies within the list; coverage = share of searches where it varies)
+
+| History block | Coverage (shop) | Same product | Same shop | Same brand | Same L3 path |
+|---|---:|---:|---:|---:|---:|
+| 0-7 d CLICK | 33% | 0.324 | 0.186 | 0.070 | 0.031 |
+| 0-7 d CART | 19% | 0.251 | 0.169 | 0.064 | 0.031 |
+| 0-7 d ORD | 3% | 0.273 | 0.140 | 0.052 | 0.019 |
+| 7-90 d CART | 25% | 0.253 | 0.137 | 0.032 | 0.019 |
+| 7-90 d ORD | 9% | 0.265 | 0.125 | 0.042 | 0.008 |
+| 90-365 d ORD | 12% | 0.236 | 0.111 | 0.038 | 0.003 |
+
+1. **Recent clicks carry most of the total signal**: over all searches, 0-7 d clicks alone reach 0.068 (product) and 0.062 (shop), about 70% of pooled history (0.093, 0.088).
+2. **Type at fixed age:** within 0-7 days clicks are at least as informative per piece of evidence as carts and orders. The weak click signal in pooled data is a window artefact.
+3. **Age at fixed type:** broad evidence fades with age (brand from carts 0.064 to 0.032; L3 path from orders 0.019 to 0.003), exact-product evidence hardly (orders 0.27 / 0.27 / 0.24).
+
+**E04: context lead with types held fixed** (same-product gain, last action under 10 minutes minus 6 hours to 7 days before the search)
+
+| History used | Difference [95% interval] |
+|---|---:|
+| Pooled (interim replication) | 0.126 [0.118, 0.135] |
+| No clicks | 0.038 [0.032, 0.044] |
+| Carts and orders older than 7 days | 0.002 [-0.003, 0.007] |
+
+Same pattern for shop (0.080 / 0.030 / -0.004) and brand (0.043 / 0.017 / -0.001). **History does not become more useful because the search continues a session; fresh evidence is simply the strongest.** Open: shoppers inactive for 7+ days gain less from the same old history (shop 0.022 vs 0.040-0.053); not yet explained.
+
+**E05: leakage and re-finds**
+
+- **No sign of leakage:** engaged candidates appear in history far more often than ignored ones (9.4% vs 0.6%; latest action within 10 minutes 3.9% vs 0.2%), but only 0.7% of those recent actions carry the current query. The current search's own clicks would; these come from browsing or other searches (83% clicks). Re-finding products seen minutes earlier is real behaviour. Evidence, not proof.
+- **Shop and brand generalise:** matches on other products of the same shop keep 60% of the shop gain (0.052 of 0.088 over all searches), brand 40% (0.014 of 0.035).
+
+**Consequences for `03_features`:** match features per (window, type, level) instead of pooled counts; age-aware weighting for broad matches (brand, shop, category); exact-product and other-product matches as separate features; report results with and without very recent same-product matches so the re-find share is visible.
 
 ## 8. Parked ideas
 
