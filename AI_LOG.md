@@ -35,11 +35,11 @@ This log records only meaningful AI-assisted technical decisions that may be use
 - **Critical evaluation:** Numbers held, but three claims overreached: "session context irrelevant" (offsetting coverage and conditional gain), "equal evidence quality per action" (different search subsets), "no leakage" (weak query test). It also found a documentation error and LightGBM's default exponential gains.
 - **Final action and validation:** Claims weakened, errors fixed, evaluation guardrails added; context becomes a model ablation. Reviewed by Liam.
 
-### 2026-10-25 - Two independent AI reviews of feature set v1 (DRAFT: member to review)
+### 2026-10-25 - Two independent AI reviews of feature set v1
 
 - **Member:** Liam Kunert
 - **Related work:** `notebooks/03_features.ipynb` (v1 to v2), experiments E07-E08
 - **Objective:** Find leakage, bugs and overreaching claims before training models on the features.
 - **AI contribution:** A Claude subagent re-implemented 12 features (0 mismatches) and decomposed the popularity signal; a second LLM reviewed the code and the planned ablations.
 - **Critical evaluation:** No leakage, but popularity counts were distributed differently for training and validation rows, missing text gave 0 instead of unknown, and our popularity explanation was contradicted. The ablation ladder could not separate windows from context.
-- **Final action and validation:** Rebuilt as v2 with distribution and permutation checks; ablation design rewritten.
+- **Final action and validation:** Rebuilt as v2 with distribution and permutation checks; ablation design rewritten. Reviewed by Liam.
