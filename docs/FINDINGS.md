@@ -9,9 +9,11 @@ What our exploration established, and what each result means for the pipeline. T
 | Product/brand/shop/category history matches, query-less history | `notebooks/exploration/history_match_validation.ipynb` |
 | How search context changes the value of history (section 6) | `notebooks/exploration/session_context_check.ipynb` |
 | Interim report Figure 5 | `scripts/signal_check_figure.py` |
+| Action types by days before the search (section 7) | `notebooks/exploration/history_timeline.ipynb` |
+| Signals by window and type, context lead re-check, leakage and re-finds (sections 6-7) | `notebooks/exploration/window_recheck.ipynb` |
 | First team EDA (superseded, kept for reference) | `notebooks/exploration/early_eda.ipynb` |
 
-Last updated 4 October 2026.
+Last updated 23 October 2026 (section 7 added after the interim feedback; section 6 revised by the window re-check; wording in sections 5-7 tightened after an independent review, experiment E06).
 
 ## 1. Scope conventions
 
@@ -95,7 +97,7 @@ Reviewed 4 October 2026 from [their repository](https://github.com/myathetchai/b
 **Model**
 
 - **No query input** in any model.
-- **Per-user features only**: all 15 meta features are constant within a list, so they cannot rank candidates; the KMeans cluster ID is standardised as if numeric.
+- **Per-user features only**: all 15 meta features are constant within a list, so on their own or added linearly they cannot separate candidates; they could only matter through interactions with candidate features, which depends on the architecture. The KMeans cluster ID is standardised as if numeric. (Their stronger flaws are the ranking score, downsampled lists, the lookup error and label-dependent history filtering.)
 - **Wrong product lookup** (3.1): candidate indices come from a history-only vocabulary built from Python `set` order, but index a candidate encoder built with a different vocabulary (`Models/2. Candidate Embedding.ipynb`). Candidates get other products' brand, shop and category; candidates absent from history share index 0 (padding). The "pretrained" candidate encoder was never trained.
 
 **Splits**
@@ -103,7 +105,9 @@ Reviewed 4 October 2026 from [their repository](https://github.com/myathetchai/b
 - **Row-level split** (3.2): `train_test_split` on flattened (user, candidate) rows puts one user's candidates in train, validation and test.
 - **Scaler and KMeans fitted on all users** before the split (minor).
 
-## 6. Promising lead: history's value depends on search context
+## 6. Promising lead: history's value depends on search context (revised 23 Oct)
+
+> **Revised by the window re-check (E04, section 7.1; wording tightened after E06):** a large part of the gradient below disappears when fresh evidence is removed: without clicks it shrinks by about 70%, and for history older than 7 days the difference in total gain is at most about 0.007 (vs 0.126 pooled). This does **not** show that session context is irrelevant: the near-equal total gain of old history combines higher coverage with lower conditional gain for recently active shoppers, and context could still decide which fresh evidence matters. Whether context features add value beyond window-aligned evidence will be tested in trained models (with vs without time since last action and its interactions). The past-query-overlap moderator below has not been re-checked yet.
 
 **Lead** (from a quick untrained check, not yet a central claim). The value of a shopper's history may depend on whether the search continues an ongoing shopping session. Mid-session, history (especially recent and query-related history) should strongly shape the ranking; for a shopper returning after days, ranking should rely more on query relevance and popularity. This sharpens our business question ("how much should past behaviour shape search?") without changing the task or target.
 
@@ -130,12 +134,74 @@ Reviewed 4 October 2026 from [their repository](https://github.com/myathetchai/b
 **Caveats and checks owed**
 
 - Untrained single-signal rankings on a 4,941-search sample; segments are correlated, effects are not causal.
-- Confirm that history strictly precedes the search (no leakage from the final search's own interactions).
-- Exclude exact re-finds of products interacted with minutes earlier and check that shop/brand gains remain.
-- Rerun on a larger sample; test the interaction inside trained models (a tree ranker with time-since-last-action may capture it without a custom architecture, in which case the contribution is the analysis).
+- ~~Confirm that history strictly precedes the search~~: no sign of leakage (E05a, section 7.1).
+- ~~Exclude exact re-finds and check that shop/brand gains remain~~: they remain (E05b, section 7.1).
+- ~~Rerun on a larger sample~~: done on 19,733 training searches (E04), with the revision above; test the interaction inside trained models (a tree ranker with time-since-last-action may capture it without a custom architecture, in which case the contribution is the analysis).
 - Not new in the literature (short- vs long-term interest; adaptive personalisation such as ZAM); claim evidence and interpretability on real search data, not novelty of the idea.
 
-## 7. Parked ideas
+## 7. History has action-specific observation windows (post-interim)
+
+Prompted by the interim feedback (clicks should outnumber carts 5-10:1 and carts outnumber orders 3-5:1, yet history shows the reverse). Evidence: `notebooks/exploration/history_timeline.ipynb` on the full data (26,667,260 actions), experiment E01 in [EXPERIMENT_LOG.md](EXPERIMENT_LOG.md). Elapsed days = sum of all gaps after an action, including the final gap to the search.
+
+| Action type | Actions | Recorded up to | Window |
+|---|---:|---:|---|
+| CLICK | 8,298,894 | 7 days (107 stragglers up to day 13) | short |
+| CART | 11,526,504 | 90 days (1,204 stragglers beyond) | medium |
+| FLW | 24,579 | 90 days | medium |
+| ORD | 6,817,283 | 365 days | long |
+
+| Window before search | Clicks | Carts | Orders | Clicks per cart | Carts per order |
+|---|---:|---:|---:|---:|---:|
+| 0-7 days | 8,298,787 | 1,335,157 | 202,822 | 6.2 | 6.6 |
+| 7-90 days | 107 | 10,190,143 | 1,833,103 | – | 5.6 |
+| 90-365 days | 0 | 1,203 | 4,781,358 | – | – |
+
+What this means:
+
+1. **The inverted funnel is an artefact of the published data's observation windows.** Hard, type-specific cutoffs at 7, 90 and 365 days point to a technical selection (export filter, source systems or retention); the paper only describes one year of history, so the exact mechanism is unknown. Inside the 7-day window where all types are observed, the event ratios are plausible (about 6 clicks per cart, 6-7 carts per order); these are event counts, not a validated conversion funnel. The interim statement "carts outnumber clicks in history" (action mix 43/31/26) describes the observation windows, not behaviour.
+2. **Action type and age are confounded.** A click is always recent; an order is usually old. Any feature or model weight "per action type" also encodes age, and any recency feature also encodes type mix. Compare types only within a shared window.
+3. **"No clicks" mostly means "no activity in the last 7 days"**, not "a user who doesn't click": 28,184 records (16.2%) have no click at all; 71.6% of them had no action of any type in the last 7 days, the rest only carts or orders.
+4. **Re-check results that pooled the windows.** The context lead in section 6 (history helps more shortly after the last action): searches with more than 7 days since the last action have no clicks by construction, so part of the gradient may be the visible action types, not recency itself. Also affected: history-length effects, the query-less share (28% of clicks vs 51% of orders are search-linked), and same-product matches (a 7-day click is a re-find, a 6-month order is a repurchase).
+5. **Feature engineering follows the windows:** a short-term block (0-7 days, all types and recent queries), a medium-term block (7-90 days, carts, follows **and orders**) and a long-term block (90-365 days, orders only), each with its own match features and recency measured from the search. Missing old clicks are **unobserved**, not "no interest"; the data cannot say how useful clicks older than 7 days would be.
+6. **Minor:** carts dip around day 64 before the search (possible logging gap); orders show spikes (likely sales events). Not yet investigated.
+
+### 7.1 Re-check under the windows (E03-E05)
+
+Evidence: `notebooks/exploration/window_recheck.ipynb`, 19,733 searches with an engaged candidate from the training dev subsample (validation and test labels not used). Gain = single-signal NDCG@10 minus random, exact under random ties; untrained associations that guide hypotheses, not feature weights. "Gain where it varies" averages over **different subsets of searches** per block (for example 0-7 d orders vary for only ~190 searches), so rows are not a like-for-like comparison of evidence quality.
+
+**E03: signal by window and type** (gain where the signal varies within the list; coverage = share of searches where it varies)
+
+| History block | Coverage (shop) | Same product | Same shop | Same brand | Same L3 path |
+|---|---:|---:|---:|---:|---:|
+| 0-7 d CLICK | 33% | 0.324 | 0.186 | 0.070 | 0.031 |
+| 0-7 d CART | 19% | 0.251 | 0.169 | 0.064 | 0.031 |
+| 0-7 d ORD | 3% | 0.273 | 0.140 | 0.052 | 0.019 |
+| 7-90 d CART | 25% | 0.253 | 0.137 | 0.032 | 0.019 |
+| 7-90 d ORD | 9% | 0.265 | 0.125 | 0.042 | 0.008 |
+| 90-365 d ORD | 12% | 0.236 | 0.111 | 0.038 | 0.003 |
+
+1. **Recent clicks alone reach about 70% of the pooled-history gain** over all searches (0.068 vs 0.093 product; 0.062 vs 0.088 shop). This is a stand-alone comparison, not a decomposition: rankings do not add up signals.
+2. **Type at fixed age:** within 0-7 days, click-based rankings are not weaker than cart- or order-based ones where they apply. Because the subsets differ (and clicks are younger on average), this does not prove equal quality per action; a paired comparison on searches with both signals would be needed.
+3. **Age at fixed type:** broad evidence is weaker in older blocks (brand from carts 0.064 to 0.032; L3 path from orders 0.019 to 0.003), exact-product evidence much less so (orders 0.27 / 0.27 / 0.24). Ageing is still mixed with selection (old exact matches may pick out persistent interests or repurchased products).
+
+**E04: context lead with types held fixed** (same-product gain, last action under 10 minutes minus 6 hours to 7 days before the search)
+
+| History used | Difference [95% interval] |
+|---|---:|
+| Pooled (interim replication) | 0.126 [0.118, 0.135] |
+| No clicks | 0.038 [0.032, 0.044] |
+| Carts and orders older than 7 days | 0.002 [-0.003, 0.007] |
+
+Same pattern for shop (0.080 / 0.030 / -0.004) and brand (0.043 / 0.017 / -0.001). **A large part of the recency difference disappears when fresh evidence is removed; an additional value of context features is untested.** The near-zero difference for old history hides offsetting parts (E06 recomputation): recently active shoppers have more old evidence (variation in 11.4% vs 9.2% of searches for product) but lower conditional gain (0.238 vs 0.274). Shoppers inactive 7+ days gain less mainly because they have far less old history (27 vs 93-107 old actions on average).
+
+**E05: leakage and re-finds**
+
+- **No sign of leakage, but no proof either:** engaged candidates appear in history far more often than ignored ones (9.4% vs 0.6%; latest action within 10 minutes 3.9% vs 0.2%), yet only 0.7% of those recent actions carry the current query (1.45% among those with a known query; 0.83% if any action within 10 minutes counts, E06). The query check is weak because about half of these actions have no query. The strongest evidence is the dataset description (history before the last search). Robustness check for the models: retrain and evaluate with history from at least 1 minute, 10 minutes and 1 hour before the search.
+- **Shop and brand evidence from other products helps:** matches on other products of the same shop keep 60% of the shop gain (0.052 of 0.088 over all searches), brand 40% (0.014 of 0.035). This does not yet show that the gain comes from personally unknown or cold candidates; check in model diagnostics with coldness defined on training data only.
+
+**Consequences for `03_features`:** match features per (window, type, level) instead of pooled counts; age information for broad matches (brand, shop, category); exact-product and other-product matches as separate features; keep time since last action as a context feature. Which features matter is decided by retrained group ablations, not by these single-signal rankings.
+
+## 8. Parked ideas
 
 - **Repurchase vs "already bought"**: category-dependent effect of a past purchase (consumables vs durables). Crisp insight, but exact repeats cover only 0.79% of candidates and follows (FLW) are 0.09% of history. Good side analysis.
 - **Better text relevance**: BM25 and term-ID embeddings learned from titles and queries. Necessary relevance component; every group will build it; lexical gains are modest here.

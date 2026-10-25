@@ -23,3 +23,14 @@ This log records only meaningful AI-assisted technical decisions that may be use
 - **AI contribution:**
 - **Critical evaluation:**
 - **Final action and validation:**
+
+## Entries
+
+### 2026-10-23 - Independent AI review of the window re-check
+
+- **Member:** Liam Kunert
+- **Related work:** `notebooks/exploration/window_recheck.ipynb`, experiments E03-E06
+- **Objective:** Check whether the re-check conclusions (history signals by window; interim context lead) hold.
+- **AI contribution:** Claude Code ran the analysis and drafted interpretations; a second LLM, given a neutral prompt and the repository, critically reviewed them and recomputed parts.
+- **Critical evaluation:** Numbers held, but three claims overreached: "session context irrelevant" (offsetting coverage and conditional gain), "equal evidence quality per action" (different search subsets), "no leakage" (weak query test). It also found a documentation error and LightGBM's default exponential gains.
+- **Final action and validation:** Claims weakened, errors fixed, evaluation guardrails added; context becomes a model ablation. Reviewed by Liam.
