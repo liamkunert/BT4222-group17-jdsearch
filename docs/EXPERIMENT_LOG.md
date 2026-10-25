@@ -109,3 +109,11 @@ How the documentation fits together:
 - **Setup:** `notebooks/04_baselines.ipynb`, feature set v2, 19,772 validation searches with an engaged candidate; ten references fixed in advance from training-row evidence; NaN scored as 0; exact tie expectation; paired bootstrap differences; logged to `docs/experiment_results.csv` (commit 289d8e1).
 - **Result:** history popularity 0.341, exposures 0.315, engagement rate 0.245, same product (all history) 0.182, recent clicks 0.155, shop via other products 0.136, query-related history 0.136, Jaccard 0.097, BM25 0.093, random 0.085. Personal history gains mainly with recent activity (+0.107 vs +0.027) and longer histories; popularity gains are the same with and without recent activity.
 - **Decision:** expectation confirmed. The trained G0-G2 ranker is the reference for personalisation; next the LightGBM base model and ablations (05). Team 3's model and correction ladder still to add to 04.
+
+### E10 - Team 3's evaluation protocol applied to known rankings (2026-10-25, Liam)
+
+- **Question:** How much do Team 3's evaluation choices (downsampled lists, exponential gains, array-order ties) inflate NDCG, and what does their reported 0.568 mean?
+- **Expectation:** random order scores far above 0.085 on their downsampled lists (the interim simulation on all data gave 0.533).
+- **Setup:** `notebooks/04_baselines.ipynb` (part 1 of the Team 3 section); their sampling and their NDCG / HR functions copied verbatim; applied to our 19,772 validation searches for random order, history popularity and same-product history; 20 random tie orders per search; no model trained; nothing logged to the registry (not comparable with full lists).
+- **Result:** downsampled lists average 9.4 candidates. Team 3 protocol: random NDCG@10 0.532 / HR@10 0.992, same-product history 0.585, history popularity 0.742; their model reported 0.568 / 0.978. Gain formula barely matters (random 0.532 vs 0.535 with our metric on the same lists).
+- **Decision:** expectation confirmed; their reported model is +0.036 above random and below a one-line history rule on their own protocol. Part 2: re-implement their model and correct one flaw at a time on our protocol (correction ladder). FINDINGS 5 updated.
