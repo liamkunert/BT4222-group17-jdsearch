@@ -1,2 +1,11 @@
 date,experiment,model,split,searches,ndcg_at_10,ndcg_ci_low,ndcg_ci_high,recall_at_10,mrr,commit,notes
 2026-10-20,E02,random order,validation,19772,0.08448,0.08304,0.08602,0.15988,0.10197,bc36467,all candidates tied; exact expectation over random order
+2026-10-25,E09,BM25,validation,19772,0.09298,0.09027,0.09577,0.17024,0.10952,289d8e1,untrained: sort by bm25 (features v2); NaN as 0
+2026-10-25,E09,query-title Jaccard,validation,19772,0.09731,0.09441,0.10023,0.18064,0.11282,289d8e1,untrained: sort by title_jaccard (features v2); NaN as 0
+2026-10-25,E09,training exposures,validation,19772,0.31502,0.31066,0.31966,0.50211,0.30977,289d8e1,untrained: sort by pop_exposures (features v2); NaN as 0
+2026-10-25,E09,history popularity,validation,19772,0.34094,0.33639,0.34553,0.52621,0.33651,289d8e1,untrained: sort by pop_history (features v2); NaN as 0
+2026-10-25,E09,engagement rate,validation,19772,0.24499,0.24094,0.24936,0.36924,0.25757,289d8e1,untrained: sort by pop_engaged_rate (features v2); NaN as 0
+2026-10-25,E09,"same product, all history",validation,19772,0.18198,0.17834,0.1858,0.25548,0.21321,289d8e1,untrained: sort by pooled_product (features v2); NaN as 0
+2026-10-25,E09,"same shop, other products",validation,19772,0.13563,0.13291,0.13836,0.23809,0.1492,289d8e1,untrained: sort by pooled_shop_other (features v2); NaN as 0
+2026-10-25,E09,"same product, recent clicks",validation,19772,0.15535,0.15197,0.15891,0.2288,0.18415,289d8e1,untrained: sort by click_0_7_product (features v2); NaN as 0
+2026-10-25,E09,"same product, query-related history",validation,19772,0.13605,0.13323,0.1391,0.20919,0.16278,289d8e1,untrained: sort by qrel_product (features v2); NaN as 0
