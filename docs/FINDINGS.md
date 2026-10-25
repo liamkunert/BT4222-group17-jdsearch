@@ -13,7 +13,7 @@ What our exploration established, and what each result means for the pipeline. T
 | Signals by window and type, context lead re-check, leakage and re-finds (sections 6-7) | `notebooks/exploration/window_recheck.ipynb` |
 | First team EDA (superseded, kept for reference) | `notebooks/exploration/early_eda.ipynb` |
 
-Last updated 23 October 2026 (section 7 added after the interim feedback; section 6 revised by the window re-check; wording in sections 5-7 tightened after an independent review, experiment E06).
+Last updated 25 October 2026 (section 7 added after the interim feedback; section 6 revised by the window re-check; wording in sections 5-7 tightened after an independent review, E06; section 8 revised with feature set v2, E08).
 
 ## 1. Scope conventions
 
@@ -201,22 +201,24 @@ Same pattern for shop (0.080 / 0.030 / -0.004) and brand (0.043 / 0.017 / -0.001
 
 **Consequences for `03_features`:** match features per (window, type, level) instead of pooled counts; age information for broad matches (brand, shop, category); exact-product and other-product matches as separate features; keep time since last action as a context feature. Which features matter is decided by retrained group ablations, not by these single-signal rankings.
 
-## 8. Popularity is the strongest single signal (feature set v1, E07)
+## 8. Popularity is the strongest single signal (feature sets v1-v2, E07-E08)
 
-Evidence: `notebooks/03_features.ipynb`, single-feature rankings on 40,000 **training** searches (popularity out-of-fold, so a search never sees its own labels).
+Evidence: `notebooks/03_features.ipynb` (v2), single-feature rankings on 40,000 **training** searches. Label-free popularity counts exclude the search's own list and history; the engagement rate is out-of-fold. All searches are from the same day, so popularity uses other users' outcomes from that day (a deployed system would not have them): the non-personalised reference is optimistic, and personalisation gains measured on top of it are conservative.
 
 | Signal | NDCG@10 | Gain over random |
 |---|---:|---:|
-| Training exposures (how often the product was shown) | 0.311 | +0.227 |
+| History popularity (how often the product is in training users' histories) | 0.339 | +0.256 |
+| Training exposures (how often the product was shown) | 0.315 | +0.231 |
 | Smoothed training engagement rate | 0.252 | +0.168 |
 | Pooled history, same product | 0.178 | +0.094 |
 | Recent clicks (0-7 d), same product | 0.152 | +0.069 |
 | Query-title Jaccard | 0.097 | +0.014 |
 | BM25 | 0.091 | +0.008 |
 
-1. **A strong non-personalised reference is essential.** Personal history must be judged by what it adds on top of popularity and relevance, not against random order.
-2. **Possible mechanism (untested):** products JD ranks highly for common queries appear in many lists and get engaged more, so exposure counts may partly recover JD's own ranking and position bias, which the file does not reveal. Check within identical queries before interpreting popularity as product appeal.
-3. **Lexical relevance is weak**, as in FINDINGS 4.5: JD's retrieval already returns lexically relevant products.
+1. **A strong non-personalised reference is essential.** Personal history must be judged by what it adds on top of popularity and relevance (a trained G0-G2 ranker), not against random order. An independent recomputation on validation confirms the exposure ranking there (0.315 vs random 0.084, E08).
+2. **The signal is mostly a cross-query property of the product.** Only 12% of the exposure mass comes from training searches with the identical query; exposures from other queries alone reach 0.309, from identical queries alone 0.178. The independent review found term-disjoint queries alone still reach 0.262. It is stronger for queries that recur in training (0.359 vs random 0.062) than for unseen ones (0.282 vs 0.099). Our earlier explanation ("products JD ranks highly for common queries") is therefore not supported.
+3. **Position bias cannot be tested with this data:** display positions are not released, and file order among non-engaged candidates carries no usable rank information (Spearman with exposures -0.02, E08 review). Product appeal, retrieval selection, availability and position effects cannot be separated.
+4. **Lexical relevance features add little** as single signals (as in FINDINGS 4.5). That JD's retrieval already returns lexically relevant products is a plausible explanation, not a tested one.
 
 ## 9. Parked ideas
 
