@@ -90,7 +90,7 @@ Reviewed 4 October 2026 from [their repository](https://github.com/myathetchai/b
 
 **Data pipeline**
 
-- **History gutted** (`1. Sampling.ipynb`, `2. Data Preprocessing.ipynb`): the catalogue is cut to products in the downsampled candidate lists, then history items outside it are deleted. Mean history drops from 153.4 to 65.7 actions; 4,515 users end up with none. Engaged candidates are always kept but only a few ignored ones are, so a user's history mostly retains products they later engaged with: label-dependent filtering of inputs.
+- **History gutted** (`1. Sampling.ipynb`, `2. Data Preprocessing.ipynb`): the catalogue is cut to products in the downsampled candidate lists, then history items outside it are deleted. Mean history drops from 153.4 to 65.7 actions; 4,515 users end up with none. Engaged candidates are always kept but only a few ignored ones are, so a user's history mostly retains products they later engaged with: label-dependent filtering of inputs. Combined with the wrong product lookup this becomes a direct label leak (E11 data check): candidates that receive an index through their history vocabulary are engaged 8.9% of the time vs 1.1% without one, and the cut includes the test users' own lists.
 - **Time gaps corrupted**: the history filter zips the time list (one element longer) with the other lists, silently dropping the final gap from the last action to the search. `3. Merged Feature Engineering.ipynb` then drops another element, assuming it is that gap, and the time-decay feature drops the most recent action type. **This removes the gap to the search, one of the context signals in section 6.**
 - **Positive-first list order** is kept and never shuffled, so tied scores can sort by label.
 
