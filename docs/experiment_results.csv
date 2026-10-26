@@ -9,3 +9,10 @@ date,experiment,model,split,searches,ndcg_at_10,ndcg_ci_low,ndcg_ci_high,recall_
 2026-10-25,E09,"same shop, other products",validation,19772,0.13563,0.13291,0.13836,0.23809,0.1492,289d8e1,untrained: sort by pooled_shop_other (features v2); NaN as 0
 2026-10-25,E09,"same product, recent clicks",validation,19772,0.15535,0.15197,0.15891,0.2288,0.18415,289d8e1,untrained: sort by click_0_7_product (features v2); NaN as 0
 2026-10-25,E09,"same product, query-related history",validation,19772,0.13605,0.13323,0.1391,0.20919,0.16278,289d8e1,untrained: sort by qrel_product (features v2); NaN as 0
+2026-10-26,E11,Team 3 ladder R0 as published,validation,19772,0.15103,0.14767,0.15459,0.23731,0.16735,ead2194,"Team 3 re-implementation (04c), Colab T4, seed 1, best inner-val epoch"
+2026-10-26,E11,Team 3 ladder R0b - label leak (cut from training lists),validation,19772,0.11238,0.10947,0.11524,0.19331,0.1291,ead2194,"Team 3 re-implementation (04c), Colab T4, seed 1, best inner-val epoch"
+2026-10-26,E11,Team 3 ladder R1 + correct candidate lookup,validation,19772,0.15575,0.15254,0.15957,0.27404,0.16409,ead2194,"Team 3 re-implementation (04c), Colab T4, seed 1, best inner-val epoch"
+2026-10-26,E11,Team 3 ladder R2 + rank by expected label,validation,19772,0.141,0.13761,0.14463,0.24856,0.15037,ead2194,"Team 3 re-implementation (04c), Colab T4, seed 1, best inner-val epoch"
+2026-10-26,E11,Team 3 ladder R3 + full history and time gaps,validation,19772,0.14306,0.13977,0.14645,0.25125,0.15346,ead2194,"Team 3 re-implementation (04c), Colab T4, seed 1, best inner-val epoch"
+2026-10-26,E11,Team 3 ladder R4 + train on complete lists,validation,19772,0.1477,0.14416,0.15113,0.25646,0.15861,ead2194,"Team 3 re-implementation (04c), Colab T4, seed 1, best inner-val epoch"
+2026-10-26,E11,Team 3 ladder R5 + relevance and popularity,validation,19772,0.29654,0.29225,0.30086,0.49207,0.28829,ead2194,"Team 3 re-implementation (04c), Colab T4, seed 1, best inner-val epoch"

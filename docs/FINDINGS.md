@@ -100,6 +100,24 @@ Reviewed 4 October 2026 from [their repository](https://github.com/myathetchai/b
 - **Per-user features only**: all 15 meta features are constant within a list, so on their own or added linearly they cannot separate candidates; they could only matter through interactions with candidate features, which depends on the architecture. The KMeans cluster ID is standardised as if numeric. (Their stronger flaws are the ranking score, downsampled lists, the lookup error and label-dependent history filtering.)
 - **Wrong product lookup** (3.1): candidate indices come from a history-only vocabulary built from Python `set` order, but index a candidate encoder built with a different vocabulary (`Models/2. Candidate Embedding.ipynb`). Candidates get other products' brand, shop and category; candidates absent from history share index 0 (padding). The "pretrained" candidate encoder was never trained.
 
+**Correction ladder (E11, `notebooks/04c_team3_ladder.ipynb`)**: their model re-implemented and corrected one flaw at a time, evaluated on our protocol (19,772 validation searches; random 0.084, history popularity alone 0.341).
+
+| Rung | NDCG@10 | Step |
+|---|---:|---:|
+| R0 as published | 0.151 | |
+| R0b label leak removed | 0.112 | -0.039 |
+| R1 correct candidate lookup | 0.156 | +0.043 |
+| R2 rank by expected label | 0.141 | -0.015 |
+| R3 full history and time gaps | 0.143 | +0.002 (n.s.) |
+| R4 train on complete lists | 0.148 | +0.005 |
+| R5 add relevance and popularity | 0.297 | +0.149 |
+
+- The rebuild reproduces their reported HR@10 (0.980 vs 0.978) and scores below random order on their own protocol (NDCG@10 0.519 vs 0.532).
+- More than half of R0's gain over random is the label leak.
+- Code and design fixes add little on this architecture (+0.035 from R0b to R4).
+- Even with our relevance and popularity features the model stays below sorting by popularity alone (-0.044 [-0.048, -0.041]).
+- One seed; small steps (R3, R4) are within typical seed variance.
+
 **Splits**
 
 - **Row-level split** (3.2): `train_test_split` on flattened (user, candidate) rows puts one user's candidates in train, validation and test.
