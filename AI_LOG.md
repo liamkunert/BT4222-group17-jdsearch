@@ -26,14 +26,14 @@ This log records only meaningful AI-assisted technical decisions that may be use
 
 ## Entries
 
-### 2026-10-26 - Two independent AI data-generation audits (DRAFT: member to review)
+### 2026-10-26 - Two independent AI data-generation audits
 
 - **Member:** Liam Kunert
 - **Related work:** E12-E13, `docs/DATA_GENERATION_AUDIT.md`, `notebooks/exploration/data_generation_audit.ipynb`
 - **Objective:** Find dataset artefacts that could distort our signals before final modelling (after missing the observation windows).
 - **AI contribution:** A Claude subagent audited training data; an external LLM reconstructed validation features and tested timing and coverage hypotheses.
 - **Critical evaluation:** Only the subagent found the clamped 1-second gap (post-search actions) and the removed same-query history; we re-verified both on all records. The external audit confirmed every reference number and added metadata-coverage and wording issues.
-- **Final action and validation:** Clamped searches excluded, features rebuilt (v3), findings corrected.
+- **Final action and validation:** Clamped searches excluded, features rebuilt (v3), findings corrected. Reviewed by Liam.
 
 ### 2026-10-23 - Independent AI review of the window re-check
 
