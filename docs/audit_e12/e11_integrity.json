@@ -1,0 +1,11 @@
+{
+  "searches": 19772,
+  "same_eligible_searches": true,
+  "max_random_error": 2.220446049250313e-16,
+  "max_popularity_error": 2.220446049250313e-16,
+  "r5_minus_popularity": [
+    -0.04440643071021401,
+    -0.047684438301206174,
+    -0.04101791428209677
+  ]
+}

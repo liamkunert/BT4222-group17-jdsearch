@@ -1,0 +1,22 @@
+{
+  "candidate_occurrences": 1781573,
+  "warm_to_40k_dev_lists": 0.3915107604347394,
+  "warm_to_36k_fit_lists": 0.37620967538237277,
+  "warm_to_full_133831_train_lists": 0.5609885196957969,
+  "warm_to_full_train_histories": 0.4060097453205678,
+  "fit_full_list_label_counts": [
+    3149745,
+    46545,
+    15586,
+    4405
+  ],
+  "normalized_inverse_frequency_class_weights": [
+    0.0010144069648165485,
+    0.06864589677508001,
+    0.20499956790684581,
+    0.7253401283532576
+  ],
+  "validation_histories_capped_at_200": 4726,
+  "saved_lengths_equal_min_raw_200": true,
+  "max_encoded_history": 200
+}

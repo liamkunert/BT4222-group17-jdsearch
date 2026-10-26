@@ -1,0 +1,21 @@
+{
+  "sample_searches": 300,
+  "catalogue_rows_scanned": 12141247,
+  "candidate_checks_per_feature": {
+    "in_catalogue": 27540,
+    "pooled_product": 27540,
+    "pooled_shop_other": 27540,
+    "pooled_brand_other": 27540,
+    "pooled_L3": 27540,
+    "title_jaccard": 27540
+  },
+  "mismatches": {
+    "in_catalogue": 0,
+    "pooled_product": 0,
+    "pooled_shop_other": 0,
+    "pooled_brand_other": 0,
+    "pooled_L3": 0,
+    "title_jaccard": 0
+  },
+  "runtime_seconds": 37.72870588302612
+}

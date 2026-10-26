@@ -1,0 +1,6 @@
+{
+  "exposure_mismatches": 0,
+  "history_mismatches": 0,
+  "rate_mismatches_at_float32": 0,
+  "rate_max_abs_error": 2.6854321655278568e-08
+}

@@ -1,0 +1,30 @@
+{
+  "source_head": "de7e407e0307c9965ad8e1fa60abd6cc261cddb8",
+  "python": "3.12.10",
+  "numpy": "2.0.2",
+  "pandas": "2.2.2",
+  "note": "Notebook code executed as identical scripts; current audit files are uncommitted. Test fields not parsed. Hashes identify inputs, not a certification of upstream provenance.",
+  "inputs": {
+    "data/user_behavior_data.txt": {
+      "bytes": 957229589,
+      "sha256": "798a1202fc4e965c4943f9fcca82af3ed73e3840d2944a5325efbb098a3e6b19"
+    },
+    "data/product_meta_data.txt": {
+      "bytes": 4841695274,
+      "sha256": "3650542cdfeca3687eaf5bbc72373ee016a00c36dcbbb07aec53a14827122271"
+    },
+    "data/processed/split_v1.csv": {
+      "bytes": 3405542,
+      "sha256": "cb7a54283fefb3daa7ad70d1cf2035ed6b20ec6c620e0cc35aa7fde742a0938b"
+    },
+    "data/processed/features_v2_validation.parquet": {
+      "bytes": 37628603,
+      "sha256": "d699f0b3f0f01713a840ee5070470e8df0fc564e0de100df7138cbe86772467e"
+    },
+    "data/processed/team3/ladder_per_search.parquet": {
+      "bytes": 639460,
+      "sha256": "af9e104548067d4675fcfcb07975a8a141910cf8d9d98473ac93e9bb9ce34598"
+    }
+  },
+  "audit_notebook_sha256": "5fdcbfaa7359a2a0cb0bfb489e344c5905ca0a8e49f7579495c7021df689dda2"
+}

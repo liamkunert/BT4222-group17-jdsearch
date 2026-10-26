@@ -1,0 +1,10 @@
+{
+  "elapsed_seconds": 90.92649030685425,
+  "validation_records": 20000,
+  "evaluated_records": 19772,
+  "training_records": 133831,
+  "test_records_read": 0,
+  "candidate_count": 1781573,
+  "seed": 4222,
+  "bootstrap_repeats": 1000
+}
