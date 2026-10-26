@@ -9,6 +9,7 @@ Supporting analyses from the data-understanding phase. They are **not part of th
 | `session_context_check.ipynb` | How time since the last action, past-query overlap, query length and history length change the value of history | Executed; promising lead on search context (FINDINGS §6) |
 | `history_timeline.ipynb` | Post-interim: action types by days before the search (observation windows: clicks 7 d, carts 90 d, orders 1 y) | Executed; experiment E01, FINDINGS section 7 |
 | `window_recheck.ipynb` | Post-interim: signal by window and action type, context lead with types held fixed, leakage and re-finds (training dev subsample only) | Executed; experiments E03-E05, FINDINGS sections 6 and 7.1 |
+| `data_generation_audit.ipynb` | External data-generation audit: feature and reference reconstruction, popularity timing, safety gaps, conditional pairs, metadata coverage (training and validation records, no test labels) | Executed in E13; experiment E12, report in `docs/DATA_GENERATION_AUDIT.md` |
 | `early_eda.ipynb` | The team's first exploratory pass over the raw files | Superseded by `01_data_understanding.ipynb`; kept for reference |
 
 ## Run order

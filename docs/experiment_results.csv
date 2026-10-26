@@ -28,3 +28,15 @@ date,experiment,model,split,searches,ndcg_at_10,ndcg_ci_low,ndcg_ci_high,recall_
 2026-10-26,E12,audit: own_ge_1min,validation,19772,0.16607,0.16271,0.16963,0.24059,0.19456,de7e407,Fixed untrained signal; full lists; independent reconstruction; audit notebook; donor-relative historical lag where applicable
 2026-10-26,E12,audit: own_ge_10min,validation,19772,0.14674,0.14345,0.15002,0.22165,0.17219,de7e407,Fixed untrained signal; full lists; independent reconstruction; audit notebook; donor-relative historical lag where applicable
 2026-10-26,E12,audit: own_ge_1h,validation,19772,0.1391,0.13599,0.1421,0.21393,0.16393,de7e407,Fixed untrained signal; full lists; independent reconstruction; audit notebook; donor-relative historical lag where applicable
+2026-10-26,E13,"history popularity, lag 1 day",validation,19772,0.33695,0.33243,0.34143,0.52122,0.33322,e3c4047,untrained: sort by pop_history_lag1d (features v3); NaN as 0
+2026-10-26,E13,random order,validation_clean,18844,0.08418,0.08284,0.0858,0.15867,0.10256,e3c4047,clean population (final gap not clamped); sort by constant (features v3)
+2026-10-26,E13,BM25,validation_clean,18844,0.09337,0.09062,0.09632,0.1703,0.11061,e3c4047,clean population (final gap not clamped); sort by bm25 (features v3)
+2026-10-26,E13,query-title Jaccard,validation_clean,18844,0.09697,0.09405,0.09975,0.17923,0.1135,e3c4047,clean population (final gap not clamped); sort by title_jaccard (features v3)
+2026-10-26,E13,training exposures,validation_clean,18844,0.31488,0.31017,0.31935,0.50121,0.31125,e3c4047,clean population (final gap not clamped); sort by pop_exposures (features v3)
+2026-10-26,E13,history popularity,validation_clean,18844,0.34133,0.33649,0.34629,0.52616,0.33837,e3c4047,clean population (final gap not clamped); sort by pop_history (features v3)
+2026-10-26,E13,"history popularity, lag 1 day",validation_clean,18844,0.33745,0.33268,0.34234,0.52121,0.33524,e3c4047,clean population (final gap not clamped); sort by pop_history_lag1d (features v3)
+2026-10-26,E13,engagement rate,validation_clean,18844,0.24466,0.24002,0.24921,0.36732,0.25904,e3c4047,clean population (final gap not clamped); sort by pop_engaged_rate (features v3)
+2026-10-26,E13,"same product, all history",validation_clean,18844,0.15941,0.15602,0.16293,0.23243,0.1927,e3c4047,clean population (final gap not clamped); sort by pooled_product (features v3)
+2026-10-26,E13,"same shop, other products",validation_clean,18844,0.13332,0.13059,0.13613,0.23282,0.14871,e3c4047,clean population (final gap not clamped); sort by pooled_shop_other (features v3)
+2026-10-26,E13,"same product, recent clicks",validation_clean,18844,0.13302,0.1302,0.13612,0.20617,0.16361,e3c4047,clean population (final gap not clamped); sort by click_0_7_product (features v3)
+2026-10-26,E13,"same product, query-related history",validation_clean,18844,0.12269,0.12007,0.12552,0.19536,0.15092,e3c4047,clean population (final gap not clamped); sort by qrel_product (features v3)
