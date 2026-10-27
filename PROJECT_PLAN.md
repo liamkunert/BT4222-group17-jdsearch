@@ -65,6 +65,7 @@ Pipeline notebooks continue the numbering in `notebooks/`. Each step ends with e
    - **Population (E13):** searches with a clamped 1-second final gap are dropped from training; the main evaluation uses `validation_clean`, all searches as sensitivity.
    - **Hygiene:** inputs only from `features_v3_meta.json` groups (never `session_id`, `wid`, `label`, `n_candidates`); `last_action_type` categorical; searches with no engaged candidate and single-candidate lists dropped from training; all global statistics (popularity, CF graph, factors, vocabularies) from training records only and lagged; search-level features act only through interactions; importances are not read as preference weights.
    - **Robustness:** rebuild features with `MIN_AGE_DAYS` = 1 min / 10 min / 1 h and retrain the final LambdaMART.
+   - **Final runs on all training data (gate before any conclusion):** ablations and model screening run on the 40k dev subsample, so their numbers are screening results only. Before we draw conclusions, write the report's results or run the final independent review, the finalists are **retrained on all 133,831 training searches** (feature set v3 for all training records, built in chunks: about 11.3M rows, 4.4 GB as float32) and re-evaluated on `validation_clean`. The report quotes these numbers; the test set is scored once afterwards.
 5. **`06_diagnostics`:** NDCG by segment (activity in the last 7 days or not, cold vs warm candidates, history length, query overlap, list length: up to 60, 85-95, over 95), feature importance and learned window weights, business insights. History ages around day 64-66 before the search (logging outage) and sales days (Double 11, 618) are not interpreted per day.
 
 ## 6. Sampling and splits (decided 20 Oct 2026)
@@ -107,9 +108,9 @@ Every implementation, change and new finding is documented, so the work stays tr
 | 27-28 Oct | `05_models` set-up, memory profile, deployable LambdaMART base |
 | 29-31 Oct | LambdaMART ablations (personalisation, windows, context, query, source) |
 | 1-2 Nov | Item-item CF features (optional SVD) |
-| 3-5 Nov | Feature MLP, then history attention (Colab) |
-| 6 Nov | Seeds for finalists, slices, diagnostics (06) |
-| 7 Nov | Freeze configurations, test features, one test run |
+| 3-5 Nov | Feature MLP, then history attention (Colab); meanwhile on the laptop: v3 features for all training searches |
+| 6 Nov | Finalists retrained on all training searches, seeds, slices, diagnostics (06) |
+| 7 Nov | Independent review of the final results; freeze configurations, test features, one test run |
 | 8 Nov | Reproducibility check on Colab, documentation |
 | Week 11 | Final consultation with the lecturer |
 | 9 Nov | Code and data artefacts on GitHub; PDF with links on Canvas |

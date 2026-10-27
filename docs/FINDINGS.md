@@ -274,7 +274,7 @@ Two independent audits (26 Oct): a Claude subagent working on training labels on
 
 ## 11. Trained rankers (05_models)
 
-Evidence: `notebooks/05_models.ipynb`, results in `docs/experiment_results.csv`. LightGBM LambdaRank with linear gains, trained on the clean dev searches (37,567; early stopping on an inner 10%), evaluated with our exact tie-aware evaluator on `validation_clean` (18,844 searches); differences are paired per search with bootstrap intervals.
+Evidence: `notebooks/05_models.ipynb`, results in `docs/experiment_results.csv`. LightGBM LambdaRank with linear gains, trained on the clean dev searches (37,567; early stopping on an inner 10%), evaluated with our exact tie-aware evaluator on `validation_clean` (18,844 searches); differences are paired per search with bootstrap intervals. **These are screening results on the dev subsample;** the numbers for conclusions and the report come from the finalists retrained on all training searches (PROJECT_PLAN 5, "Final runs").
 
 | Model | NDCG@10 | vs lagged popularity [95% interval] | Experiment |
 |---|---:|---:|---|
