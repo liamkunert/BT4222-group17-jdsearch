@@ -13,7 +13,7 @@ What our exploration established, and what each result means for the pipeline. T
 | Signals by window and type, context lead re-check, leakage and re-finds (sections 6-7) | `notebooks/exploration/window_recheck.ipynb` |
 | First team EDA (superseded, kept for reference) | `notebooks/exploration/early_eda.ipynb` |
 
-Last updated 25 October 2026 (section 7 added after the interim feedback; section 6 revised by the window re-check; wording in sections 5-7 tightened after an independent review, E06; section 8 revised with feature set v2, E08).
+Last updated 25 October 2026 (section 7 added after the interim feedback; section 6 revised by the window re-check; wording in sections 5-7 tightened after an independent review, E06; section 8 revised with feature set v2, E08); section 11 (trained rankers) added 27 October 2026, E14.
 
 ## 1. Scope conventions
 
@@ -271,3 +271,17 @@ Two independent audits (26 Oct): a Claude subagent working on training labels on
 - In a fixed 300-search sample, old-order metadata is missing in 10.65% of events (90+ days), versus 0.29% of recent orders (0-7 days). Age-dependent observability can contribute to weaker broad matches; metadata-coverage features and denominators deserve attention. Six independently reconstructed features have zero mismatches across 27,540 sampled candidates.
 - E11's persisted per-search means and references reconcile. The 'full' sequence still uses the latest 200 events (23.63% of validation histories truncated); 39.15% candidate coverage is against the 40k development lists, versus 56.10% against full training lists. Checkpoints are selected by weighted classification loss, not NDCG.
 - Candidate structure and lexical conditioning oppose a simple arbitrary-catalogue-negative explanation, but do not reveal pagination, the 200-item cap rule, or position bias. C1/C2 removal tests explicit context features, with context proxies still present elsewhere.
+
+## 11. Trained rankers (05_models)
+
+Evidence: `notebooks/05_models.ipynb`, results in `docs/experiment_results.csv`. LightGBM LambdaRank with linear gains, trained on the clean dev searches (37,567; early stopping on an inner 10%), evaluated with our exact tie-aware evaluator on `validation_clean` (18,844 searches); differences are paired per search with bootstrap intervals.
+
+| Model | NDCG@10 | vs lagged popularity [95% interval] | Experiment |
+|---|---:|---:|---|
+| Random order | 0.084 | | E13 |
+| Lagged history popularity (single signal) | 0.337 | | E13 |
+| LambdaMART base: query length, relevance, lagged popularity (G0 + G1 + G2a) | 0.347 | +0.0096 [0.0076, 0.0114] | E14 |
+
+1. **Relevance adds about 0.01 on top of deployable popularity once a model combines them**, although BM25 alone scores only 0.093 (E09). The gain is concentrated in lists of up to 84 candidates (+0.02); in lists of more than 95 candidates the base is not distinguishable from popularity. Lagged popularity has 86% of the split gain, BM25 9%.
+2. **The deployable base (0.347) is the reference for personalisation**: history features are judged by what they add to it, not to the single popularity signal.
+3. **Memory is not a constraint on the dev subsample**: all 97 features with a LightGBM dataset and the validation features peak at 2.8 GB. All training searches would be about 11.3M rows (4.4 GB as float32).
