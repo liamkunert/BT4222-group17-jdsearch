@@ -84,3 +84,20 @@ How the documentation fits together:
 - **Setup:** a second LLM reviewed the repository files, recomputed saved results, checked the metrics against enumerated orderings and examined the E03-E05 sample. See AI_LOG for the interaction.
 - **Result:** metrics and numbers confirmed. Overreaching interpretations: E04 does not rule out session context (old history: coverage 11.4% vs 9.2%, conditional product gain 0.238 vs 0.274 for recently active vs 6 h - 7 d; the 7+ day group has 27 vs ~100 old actions); E03 "per evidence" comparisons use different search subsets; E05 query check is weak (1.45% among known queries; 0.83% with all actions within 10 minutes). Errors found: medium block omitted 7-90 d orders; LightGBM defaults to exponential label gains; evaluation lacked completeness checks; training must not see file order.
 - **Decision:** wording in FINDINGS 5-7 and E01/E03-E05 corrected; evaluation guardrails and candidate shuffling added (notebook 02, section 8); context, query overlap and repurchase become model ablations instead of further single-signal checks; `label_gain=[0,1,2,3]` required.
+
+### E07 - Feature set v1 (2026-10-23, Liam)
+
+- **Question:** Can we build the planned feature groups (G0-G6) reproducibly and without leakage, and do they reproduce the re-check signals?
+- **Expectation:** history features reproduce E03; query-title relevance modest; popularity useful.
+- **Setup:** `notebooks/03_features.ipynb`; 40,000 training (dev) and 20,000 validation searches; 68 features in 7 groups; candidates shuffled within each search; popularity from training records only, out-of-fold for training rows (5 folds by search, rescaled 5/4); BM25 with whole-catalogue statistics; outputs `data/processed/features_v1_*.parquet`.
+- **Result:** all checks passed; pooled product / shop / recent-click gains on training rows 0.094 / 0.087 / 0.069 (E03: 0.093 / 0.088 / 0.068). Popularity means within 1% between splits. Strongest single signal: training exposures NDCG@10 0.311 (+0.227 over random), engagement rate +0.168; BM25 only +0.008, title Jaccard +0.014.
+- **Correction (E08):** the popularity mechanism above is not supported (only 12% of exposure mass from identical queries), and the 5/4 rescaling made means match but not distributions; superseded by feature set v2.
+- **Decision:** feature set v1 is the input for baselines and models. The non-personalised reference must include popularity; personalisation is measured on top of it. Open question: exposure counts may partly recover JD's own ranking (position bias); check within queries before interpreting. FINDINGS 8 added.
+
+### E08 - Reviews of feature set v1 and feature set v2 (2026-10-25, Liam)
+
+- **Question:** Is feature set v1 correct and leakage-free, and does it support the planned ablations?
+- **Expectation:** no leakage; some design gaps.
+- **Setup:** two independent reviews (Claude subagent: re-implemented 12 features on 300 searches, decomposed the popularity signal; second LLM: code and ablation design). Fixes in `notebooks/03_features.ipynb`, rebuilt as feature set v2 (90 features, 11 groups) with distribution checks (zero shares, quantiles), a permutation test and a popularity-mechanism check on training rows.
+- **Result:** v1 had no leakage, but popularity counts were distributed differently for training and validation rows (zero exposures 46.6% vs 43.9%, 1.25 grid), the prior used all training labels, missing brand names gave 0 (7.35% of candidates), shuffling depended on the set of built searches, two block names hid open upper bounds, and our popularity explanation was wrong. In v2 the zero shares match (43.6% vs 43.9%), all checks pass, and the features reproduce E03/E07. Popularity: 12% of exposure mass from identical queries; other queries alone 0.309. History popularity is the strongest single signal (0.339).
+- **Decision:** v2 is the input for baselines and models. Ablations are redesigned (PROJECT_PLAN 5): window question with H1 vs H2 vs H3 at equal match definitions, context question removing all context including history volume. FINDINGS 8 rewritten.
