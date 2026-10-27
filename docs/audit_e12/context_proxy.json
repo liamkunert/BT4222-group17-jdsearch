@@ -1,0 +1,6 @@
+{
+  "searches": 20000,
+  "recent_activity_exactly_recoverable_from_C1_counts": false,
+  "recent_activity_proxy_mismatches_due_to_follow_or_stragglers": 50,
+  "history_over_200": 4726
+}

@@ -17,6 +17,7 @@ AI_LOG.md                        AI interaction log (required in the final repor
 docs/
   FINDINGS.md                    What exploration established and what it means for the pipeline
   EXPERIMENT_LOG.md              Every post-interim experiment: question, setup, result, decision
+  DATA_GENERATION_AUDIT.md       External data-generation audit (E12), with tables in audit_e12/
   experiment_results.csv         Results registry: one row per evaluated ranking (written by scripts/evaluation.py)
   dataset-specific-insights.md   The lecturer's dataset hints
   guidelines/                    Course guidelines (interim report, final deliverables)
@@ -25,7 +26,10 @@ notebooks/
   00_setup_and_data_access.ipynb Environment and data checks
   01_data_understanding.ipynb    Full-data summaries, feature dictionary, interim report evidence
   02_split_and_evaluation.ipynb  Fixed train/validation/test split, shared evaluation, random-order floor
-  03_features.ipynb              Feature set v2: 90 features in 11 groups per (search, candidate)
+  03_features.ipynb              Feature set v3: 97 features in 13 groups per (search, candidate)
+  04_baselines.ipynb             Simple untrained references on validation; Team 3's evaluation protocol
+  04b_team3_prep.ipynb           Inputs for the Team 3 correction ladder (CPU)
+  04c_team3_ladder.ipynb         Team 3's model re-implemented and corrected step by step (GPU, Colab)
   exploration/                   Supporting analyses, not part of the pipeline (see its README)
 scripts/                         Analysis modules used by the notebooks
 outputs/                         Generated tables and figures by stage (ignored by Git)
@@ -77,7 +81,9 @@ In VS Code, select the project's `.venv` as the notebook kernel.
 - `00_setup_and_data_access.ipynb`: locates the dataset and verifies the local or Colab environment.
 - `01_data_understanding.ipynb`: consolidated raw-data summaries, feature dictionary, statistics and report figures. Raw summaries use the full files; engineered features use 5,000 uniformly sampled whole records, seed 4222.
 - `02_split_and_evaluation.ipynb`: builds the search table and the fixed split `split_v1` (saved under `data/processed/`), validates the shared evaluation function and logs the random-order floor on validation. Run it once before any later pipeline notebook.
-- `03_features.ipynb`: builds feature set v2 (90 features in 11 groups; popularity from training records only) for the training dev subsample and validation; writes `data/processed/features_v2_*.parquet` and `features_v2_meta.json`. About 35 minutes; needs notebook 02 first. In Colab, outputs under `data/processed/` disappear with the runtime unless copied to Drive.
+- `03_features.ipynb`: builds feature set v3 (97 features in 13 groups; popularity from training records only, including a deployable version lagged by one day) for the training dev subsample and validation; writes `data/processed/features_v3_*.parquet` and `features_v3_meta.json`. About 25 minutes; needs notebook 02 first. Searches with a clamped 1-second final gap (post-search actions in the history) are flagged in `search_table.parquet` and excluded from training and the main evaluation (E12-E13). In Colab, outputs under `data/processed/` disappear with the runtime unless copied to Drive.
+- `04_baselines.ipynb`: untrained single-signal references (random, relevance, popularity, personal history) on validation, overall and by segment; logs E09 to the results registry. A few minutes; needs notebook 03 first.
+- `04b_team3_prep.ipynb` and `04c_team3_ladder.ipynb`: Team 3's model re-implemented and corrected one flaw at a time (E11). Run 04b locally (about 7 minutes, writes `data/processed/team3/`), copy that folder to `MyDrive/BT4222 Group Project/processed/team3/`, then run 04c on a Colab T4 GPU (instructions at its top). Without a GPU, 04c runs a short smoke test.
 - `exploration/`: query and history validation notebooks, the session-context check, the post-interim history timeline and the first team EDA. Their purpose and run order are in [notebooks/exploration/README.md](notebooks/exploration/README.md).
 
 **Working conventions (post-interim).** All analysis, modelling and evaluation code lives in Jupyter notebooks, executed with outputs saved, because the pipeline is run and submitted on Colab. Only a few functions shared by several notebooks (parsing, evaluation) live in `scripts/` and are imported. Every experiment gets an entry in [docs/EXPERIMENT_LOG.md](docs/EXPERIMENT_LOG.md); results that change what we believe also go into FINDINGS, and changes of direction into PROJECT_PLAN.

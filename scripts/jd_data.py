@@ -47,10 +47,14 @@ def search_table(path):
         elapsed = elapsed_days(gaps)
         rows.append((session_id, len(labels), int((labels >= 1).sum()), int((labels == 3).sum()), len(types),
                      int((types == "CLICK").sum()), int((types == "CART").sum()), int((types == "ORD").sum()),
-                     int((types == "FLW").sum()), int((elapsed < 7).sum()), gaps[-1] / SECONDS_PER_DAY))
-    return pd.DataFrame(rows, columns=[
+                     int((types == "FLW").sum()), int((elapsed < 7).sum()), gaps[-1] / SECONDS_PER_DAY, int(gaps[-1])))
+    table = pd.DataFrame(rows, columns=[
         "session_id", "n_candidates", "n_engaged", "n_purchased", "history_len", "n_click", "n_cart", "n_ord",
-        "n_flw", "actions_last_7d", "days_since_last_action"]).set_index("session_id")
+        "n_flw", "actions_last_7d", "days_since_last_action", "final_gap_s"]).set_index("session_id")
+    # The final gap is never 0 but exactly 1 s in 5.3% of records: most likely gaps <= 0 clamped to 1 s, i.e. the
+    # history contains actions from during or after the final search (E12). Flagged; excluded downstream.
+    table["final_gap_clamped"] = table.final_gap_s == 1
+    return table
 
 
 def load_metadata(path, wids):

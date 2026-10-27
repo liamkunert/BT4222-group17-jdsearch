@@ -1,0 +1,11 @@
+{
+  "records": 153831,
+  "candidates": 13725099,
+  "duplicate_candidate_records": 0,
+  "candidate_label_mismatch": 0,
+  "history_alignment_mismatch": 0,
+  "negative_gap_records": 0,
+  "nonzero_first_gap": 0,
+  "all_positive_prefix": 153831,
+  "all_labels_descending": 136289
+}

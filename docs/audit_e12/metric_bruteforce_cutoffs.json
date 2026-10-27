@@ -1,0 +1,5 @@
+{
+  "cases": 90,
+  "cutoffs": "1, min(3,n), n",
+  "max_abs_error": 2.220446049250313e-16
+}

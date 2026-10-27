@@ -35,7 +35,9 @@ Last updated 25 October 2026 (section 7 added after the interim feedback; sectio
 | Most history is query-less | 64.7% of past actions have query `-1` (browsing, recommendations) | Keep query-less history as its own source |
 | Text is anonymised | Term IDs separated by `\x18`; list entries by `_` | Compare whole term IDs as distinct token sets; meanings are unavailable |
 | Selected sample | Records are active users' last searches; 98.8% contain an engagement | Rates do not represent JD's overall traffic |
-| Exact repeat queries are rare | Raw string repeat in 1 record; same distinct term set in 610 records (0.35%) | Don't build the project around exact query repeats |
+| History under the current query was removed by the publishers (E12) | Exactly 1 of 26.7M history actions carries the current query string, although 43% of training queries recur across users; same distinct term set in 610 records (0.35%) | Query-overlap features measure overlap with *other* queries only; same-query history is unobservable, not rare behaviour |
+| Final gap clamped to 1 s in 5.3% of records (E12) | The gap from the last action to the search is never 0 s but exactly 1 s in 9,241 records (2 s: 110); in these, the last product is in the list 30% of the time and then engaged 74% of the time | Most likely post-search actions in the history (label leak). Flag `final_gap_clamped` in the search table; exclude from training; main evaluation on the remaining searches, all searches as sensitivity |
+| Candidate lists are result pages (E12) | Same-query lists share a head (products in >50% of lists) and a relevant tail; engaged products sit mostly in the head; lengths cluster at multiples of 30 (90 most common, cap 200) and grow with the number of engagements | List length reflects scrolling after the query: not a feature, only a segment. Popularity partly proxies JD's own ranking |
 | Labels are deepest outcomes | One label per candidate (0 none, 1 click, 2 cart, 3 purchase) | Threshold shares are depth of engagement, not click-to-cart-to-purchase conversion |
 
 ## 3. Evaluation protocol (decided)
@@ -83,14 +85,14 @@ Reviewed 4 October 2026 from [their repository](https://github.com/myathetchai/b
 **Evaluation**
 
 - **Ranking by the wrong score** (`Models/3.1_Hybrid_NCF_with_LSTM.ipynb` and `3.2_Hybrid_NCF_with_GRU.ipynb`, test cells): candidates are ranked by `probs.max(dim=1)`, the highest class probability, so a confident "no interaction" prediction ranks at the top.
-- **Downsampled lists** (`Data Preparation/1. Sampling.ipynb`): all positives plus 4 negatives per positive, so lists average 9.3 candidates and 81% have 10 or fewer. Applying their sampling to the full data (171,728 searches, 20 random orderings each, their NDCG formula with gains 2^label - 1): random order scores **HR@10 0.992 and NDCG@10 0.533**, against their reported **0.978 and 0.568**. On complete lists, random NDCG@10 with the same formula is 0.083. This simulation was run ad hoc; add it to the baselines notebook.
+- **Downsampled lists** (`Data Preparation/1. Sampling.ipynb`): all positives plus 4 negatives per positive, so lists average 9.3 candidates and 81% have 10 or fewer. Applying their sampling to the full data (171,728 searches, 20 random orderings each, their NDCG formula with gains 2^label - 1): random order scores **HR@10 0.992 and NDCG@10 0.533**, against their reported **0.978 and 0.568**. On complete lists, random NDCG@10 with the same formula is 0.083. Reproduced on our validation searches in `notebooks/04_baselines.ipynb` (E10): random 0.532 / 0.992; on their protocol a one-line same-product rule reaches 0.585 and history popularity 0.742, both above their model. The gain formula barely matters; downsampling causes the inflation.
 - **Class collapse**: the unweighted model predicts class 0 for 98.74% of test candidates (accuracy 0.8015 = the share of class 0 after downsampling); the weighted model reaches accuracy 0.5117, macro F1 0.289; the ordinal model predicts class 1 for 89.84% (accuracy 0.1825) and is described as an improvement.
 - **No baselines** (random, popularity) anywhere.
 - **Stale outputs**: the evaluation code sets `K = 5` but the printed result says "@10"; the GRU notebook has no saved results.
 
 **Data pipeline**
 
-- **History gutted** (`1. Sampling.ipynb`, `2. Data Preprocessing.ipynb`): the catalogue is cut to products in the downsampled candidate lists, then history items outside it are deleted. Mean history drops from 153.4 to 65.7 actions; 4,515 users end up with none. Engaged candidates are always kept but only a few ignored ones are, so a user's history mostly retains products they later engaged with: label-dependent filtering of inputs.
+- **History gutted** (`1. Sampling.ipynb`, `2. Data Preprocessing.ipynb`): the catalogue is cut to products in the downsampled candidate lists, then history items outside it are deleted. Mean history drops from 153.4 to 65.7 actions; 4,515 users end up with none. Engaged candidates are always kept but only a few ignored ones are, so a user's history mostly retains products they later engaged with: label-dependent filtering of inputs. Combined with the wrong product lookup this becomes a direct label leak (E11 data check): candidates that receive an index through their history vocabulary are engaged 8.9% of the time vs 1.1% without one, and the cut includes the test users' own lists.
 - **Time gaps corrupted**: the history filter zips the time list (one element longer) with the other lists, silently dropping the final gap from the last action to the search. `3. Merged Feature Engineering.ipynb` then drops another element, assuming it is that gap, and the time-decay feature drops the most recent action type. **This removes the gap to the search, one of the context signals in section 6.**
 - **Positive-first list order** is kept and never shuffled, so tied scores can sort by label.
 
@@ -100,6 +102,24 @@ Reviewed 4 October 2026 from [their repository](https://github.com/myathetchai/b
 - **Per-user features only**: all 15 meta features are constant within a list, so on their own or added linearly they cannot separate candidates; they could only matter through interactions with candidate features, which depends on the architecture. The KMeans cluster ID is standardised as if numeric. (Their stronger flaws are the ranking score, downsampled lists, the lookup error and label-dependent history filtering.)
 - **Wrong product lookup** (3.1): candidate indices come from a history-only vocabulary built from Python `set` order, but index a candidate encoder built with a different vocabulary (`Models/2. Candidate Embedding.ipynb`). Candidates get other products' brand, shop and category; candidates absent from history share index 0 (padding). The "pretrained" candidate encoder was never trained.
 
+**Correction ladder (E11, `notebooks/04c_team3_ladder.ipynb`)**: their model re-implemented and corrected one flaw at a time, evaluated on our protocol (19,772 validation searches; random 0.084, history popularity alone 0.341).
+
+| Rung | NDCG@10 | Step |
+|---|---:|---:|
+| R0 as published | 0.151 | |
+| R0b label leak removed | 0.112 | -0.039 |
+| R1 correct candidate lookup | 0.156 | +0.043 |
+| R2 rank by expected label | 0.141 | -0.015 |
+| R3 unfiltered history (latest 200 actions) and time gaps | 0.143 | +0.002 (n.s.) |
+| R4 train on complete lists | 0.148 | +0.005 |
+| R5 add relevance and popularity | 0.297 | +0.149 |
+
+- The rebuild reproduces their reported HR@10 (0.980 vs 0.978) and scores below random order on their own protocol (NDCG@10 0.519 vs 0.532).
+- More than half of R0's gain over random is the label leak.
+- Code and design fixes add little on this architecture (+0.035 from R0b to R4).
+- Even with our relevance and popularity features the model stays below sorting by popularity alone (-0.044 [-0.048, -0.041]).
+- One seed; small steps (R3, R4) are within typical seed variance.
+
 **Splits**
 
 - **Row-level split** (3.2): `train_test_split` on flattened (user, candidate) rows puts one user's candidates in train, validation and test.
@@ -107,7 +127,7 @@ Reviewed 4 October 2026 from [their repository](https://github.com/myathetchai/b
 
 ## 6. Promising lead: history's value depends on search context (revised 23 Oct)
 
-> **Revised by the window re-check (E04, section 7.1; wording tightened after E06):** a large part of the gradient below disappears when fresh evidence is removed: without clicks it shrinks by about 70%, and for history older than 7 days the difference in total gain is at most about 0.007 (vs 0.126 pooled). This does **not** show that session context is irrelevant: the near-equal total gain of old history combines higher coverage with lower conditional gain for recently active shoppers, and context could still decide which fresh evidence matters. Whether context features add value beyond window-aligned evidence will be tested in trained models (with vs without time since last action and its interactions). The past-query-overlap moderator below has not been re-checked yet.
+> **Revised by the window re-check (E04, section 7.1; wording tightened after E06):** a large part of the gradient below disappears when fresh evidence is removed: without clicks it shrinks by about 70%, and for history older than 7 days the difference in total gain is at most about 0.007 (vs 0.126 pooled). This does **not** show that session context is irrelevant: the near-equal total gain of old history combines higher coverage with lower conditional gain for recently active shoppers, and context could still decide which fresh evidence matters. Whether context features add value beyond window-aligned evidence will be tested in trained models (with vs without time since last action and its interactions). The past-query-overlap moderator below has not been re-checked yet; it can only reflect *other* past queries, because history under the current query was removed by the publishers (E12). **E13:** without the 5% of searches with a clamped final gap (post-search actions in the history), the pooled same-product difference shrinks further from 0.126 to 0.077 [0.069, 0.084]; for history older than 7 days it stays at about 0.
 
 **Lead** (from a quick untrained check, not yet a central claim). The value of a shopper's history may depend on whether the search continues an ongoing shopping session. Mid-session, history (especially recent and query-related history) should strongly shape the ranking; for a shopper returning after days, ranking should rely more on query relevance and popularity. This sharpens our business question ("how much should past behaviour shape search?") without changing the task or target.
 
@@ -194,6 +214,8 @@ Evidence: `notebooks/exploration/window_recheck.ipynb`, 19,733 searches with an 
 
 Same pattern for shop (0.080 / 0.030 / -0.004) and brand (0.043 / 0.017 / -0.001). **A large part of the recency difference disappears when fresh evidence is removed; an additional value of context features is untested.** The near-zero difference for old history hides offsetting parts (E06 recomputation): recently active shoppers have more old evidence (variation in 11.4% vs 9.2% of searches for product) but lower conditional gain (0.238 vs 0.274). Shoppers inactive 7+ days gain less mainly because they have far less old history (27 vs 93-107 old actions on average).
 
+**E13 (searches with a clamped 1-second final gap removed, 18,813 of 19,733):** these 4.7% of searches carried 26% of the pooled same-product gain and 34% of the recent-click same-product gain, but only 7% of the shop-via-other-products gain and 5% of the gain from history older than 7 days. Clean values: pooled same product 0.071 (was 0.093), recent clicks 0.047 (was 0.068), shop via other products 0.051. The E04 difference for same product shrinks to 0.077 [0.069, 0.084] (was 0.126); without clicks 0.020 (was 0.038); older than 7 days about 0. Fresh exact-product matches are partly leakage; broad and older evidence is not affected.
+
 **E05: leakage and re-finds**
 
 - **No sign of leakage, but no proof either:** engaged candidates appear in history far more often than ignored ones (9.4% vs 0.6%; latest action within 10 minutes 3.9% vs 0.2%), yet only 0.7% of those recent actions carry the current query (1.45% among those with a known query; 0.83% if any action within 10 minutes counts, E06). The query check is weak because about half of these actions have no query. The strongest evidence is the dataset description (history before the last search). Robustness check for the models: retrain and evaluate with history from at least 1 minute, 10 minutes and 1 hour before the search.
@@ -203,7 +225,7 @@ Same pattern for shop (0.080 / 0.030 / -0.004) and brand (0.043 / 0.017 / -0.001
 
 ## 8. Popularity is the strongest single signal (feature sets v1-v2, E07-E08)
 
-Evidence: `notebooks/03_features.ipynb` (v2), single-feature rankings on 40,000 **training** searches. Label-free popularity counts exclude the search's own list and history; the engagement rate is out-of-fold. All searches are from the same day, so popularity uses other users' outcomes from that day (a deployed system would not have them): the non-personalised reference is optimistic, and personalisation gains measured on top of it are conservative.
+Evidence: `notebooks/03_features.ipynb` (v2), single-feature rankings on 40,000 **training** searches. Label-free popularity counts exclude the search's own list and history; the engagement rate is out-of-fold. Exposure counts and engagement rates use other users' same-day target searches, so chronological availability is not established. History popularity instead counts earlier historical events, some potentially from that day. E12 independently reconstructed the validation features: restricting historical events to more than 24 hours before each donor search changes NDCG from 0.340944 to 0.336950, retaining 98.44% of the gain over random. This bounds the timing sensitivity of history popularity, not the full pipeline. An optimistic base does not guarantee conservative personalization gains; compare the model increments empirically. See [DATA_GENERATION_AUDIT.md](DATA_GENERATION_AUDIT.md).
 
 | Signal | NDCG@10 | Gain over random |
 |---|---:|---:|
@@ -215,8 +237,9 @@ Evidence: `notebooks/03_features.ipynb` (v2), single-feature rankings on 40,000 
 | Query-title Jaccard | 0.097 | +0.014 |
 | BM25 | 0.091 | +0.008 |
 
-1. **A strong non-personalised reference is essential.** Personal history must be judged by what it adds on top of popularity and relevance (a trained G0-G2 ranker), not against random order. An independent recomputation on validation confirms the exposure ranking there (0.315 vs random 0.084, E08).
-2. **The signal is mostly a cross-query property of the product.** Only 12% of the exposure mass comes from training searches with the identical query; exposures from other queries alone reach 0.309, from identical queries alone 0.178. The independent review found term-disjoint queries alone still reach 0.262. It is stronger for queries that recur in training (0.359 vs random 0.062) than for unseen ones (0.282 vs 0.099). Our earlier explanation ("products JD ranks highly for common queries") is therefore not supported.
+0. **Clean validation population (E13, clamped searches removed):** history popularity 0.341, lagged by one day 0.337 (the deployable reference), exposures 0.315; same product in all history 0.159 (0.182 on all searches), recent clicks 0.133. On the 928 clamped searches the same-product rule reaches 0.640.
+1. **A strong non-personalised reference is essential.** Personal history must be judged by what it adds on top of popularity and relevance (a trained G0-G2 ranker), not against random order. Confirmed on validation (E09): history popularity 0.341, exposures 0.315, best personal single signal 0.182, BM25 0.093, random 0.085. Popularity helps equally with and without recent activity; personal history mainly with recent activity (+0.107 vs +0.027 over random).
+2. **The signal is mostly a cross-query property of the product.** Only 12% of the exposure mass comes from training searches with the identical query; exposures from other queries alone reach 0.309, from identical queries alone 0.178. The independent review found term-disjoint queries alone still reach 0.262. It is stronger for queries that recur in training (0.359 vs random 0.062) than for unseen ones (0.282 vs 0.099). Our earlier explanation ("products JD ranks highly for common queries") is therefore not supported. **E12:** within identical queries, engaged products sit mostly in the shared head of the lists (an engaged product of one user appears in another user's list 52.7% of the time, a non-engaged one 17.2%), and popularity is much weaker in long, deep-scroll lists. Popularity is therefore best described as **prior production prominence** (partly JD's own ranking and exposure), not product appeal. Deployable version: history popularity from actions at least one day old reaches 0.337 (vs 0.341), at least seven days 0.324; exposures cannot be lagged (all lists are from one day).
 3. **Position bias cannot be tested with this data:** display positions are not released, and file order among non-engaged candidates carries no usable rank information (Spearman with exposures -0.02, E08 review). Product appeal, retrieval selection, availability and position effects cannot be separated.
 4. **Lexical relevance features add little** as single signals (as in FINDINGS 4.5). That JD's retrieval already returns lexically relevant products is a plausible explanation, not a tested one.
 
@@ -226,3 +249,25 @@ Evidence: `notebooks/03_features.ipynb` (v2), single-feature rankings on 40,000 
 - **Better text relevance**: BM25 and term-ID embeddings learned from titles and queries. Necessary relevance component; every group will build it; lexical gains are modest here.
 - **Purchase-oriented or multi-objective ranking**: strong business story, but only 20,836 purchases (11.7% of searches) and a target shift after the interim is penalised.
 - **Evaluation integrity**: quantify how downsampling, file-order ties and wrong ranking scores inflate metrics. Supporting material for the baseline section.
+
+## 10. Independent data-generation audits (E12)
+
+Two independent audits (26 Oct): a Claude subagent working on training labels only (scratch scripts, findings verified in the repository where stated), and an external LLM working on training and validation records (no test labels), whose report, notebook and tables are in the repository. Both are summarised here; corrections follow in E13.
+
+**Subagent (training records); the two artefacts below were re-verified on all 173,831 records:**
+- **Clamped final gap (label leak):** never 0 s, exactly 1 s in 9,241 records (5.3%; 2 s: 110). Last product in the list 30% of the time, then engaged 74%; a query-less order of exactly the purchased product within seconds occurs 114 times for purchased candidates vs 81 times among 11.7M non-engaged. These 4.6% of searches carried about 27% of the same-product gain. Handling: section 2.
+- **History under the current query removed:** 1 of 26.7M history actions carries the current query string, although 43% of training queries recur across users.
+- **Candidate lists are result pages:** same-query lists share a head and a relevant tail; engaged products sit mostly in the head; lengths at multiples of 30 (90: 15%; 30, 60, 200: 3% each) and longer with more engagements (Spearman 0.38). `n_candidates` forms after the query.
+- **Popularity is deployable and not a re-find effect:** lag 1 day 0.336, 7 days 0.324 (training rows); without a personal match still +0.262; ranking own matches first, then popularity: 0.386. Weak in long lists (95-150 candidates: +0.129 vs +0.312 for 85-95).
+- **Purchases are mostly not checkout:** only 7.1% of searches with a purchase bought from the user's own cart history.
+- **Logging outage and sales days:** carts fall to 7% on day 65 before the search (13 Aug 2022); order spikes on 18 Jun 2022 (618), 1 Jun 2022, 11 Nov 2021 (Double 11), 1 Nov 2021 and 12 Dec 2021. Windows are calendar-aligned. No duplicate users.
+
+**External LLM:** evidence and limits in [DATA_GENERATION_AUDIT.md](DATA_GENERATION_AUDIT.md); reproducible `notebooks/exploration/data_generation_audit.ipynb`; compact tables in `docs/audit_e12/`. No model training or held-out test-label analysis.
+
+- Parsed 133,831 training and 20,000 validation records. No candidate duplicates, misaligned fields, negative gaps or nonzero initial gap placeholders. All released lists put positives first. Validation IDs, labels, exact-product counts and three population features reconstruct with zero discrepancies at stored precision.
+- Recounting history popularity by distinct training users gives 0.340800 versus event count 0.340944; no material overall difference detected. Its dominance is not explained by repeat events or the youngest historical events.
+- Removing personal history younger than ten minutes lowers exact-product single-signal NDCG from 0.181985 to 0.146744 (paired 95% difference interval [-0.037546, -0.033056]). This is dependence on fresh evidence, not proof of leakage; full-model retraining remains untested.
+- Within-search pairs with exactly equal historical popularity retain discrimination from exact-product history, shop-other, brand-other and lexical overlap. This supports testing them in a ranker; it does not establish an incremental NDCG gain over a trained base.
+- In a fixed 300-search sample, old-order metadata is missing in 10.65% of events (90+ days), versus 0.29% of recent orders (0-7 days). Age-dependent observability can contribute to weaker broad matches; metadata-coverage features and denominators deserve attention. Six independently reconstructed features have zero mismatches across 27,540 sampled candidates.
+- E11's persisted per-search means and references reconcile. The 'full' sequence still uses the latest 200 events (23.63% of validation histories truncated); 39.15% candidate coverage is against the 40k development lists, versus 56.10% against full training lists. Checkpoints are selected by weighted classification loss, not NDCG.
+- Candidate structure and lexical conditioning oppose a simple arbitrary-catalogue-negative explanation, but do not reveal pagination, the 200-item cap rule, or position bias. C1/C2 removal tests explicit context features, with context proxies still present elsewhere.

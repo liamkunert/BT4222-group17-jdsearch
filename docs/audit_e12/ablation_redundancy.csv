@@ -1,0 +1,7 @@
+match,identity,mismatches
+product,type_sum,0
+product,source_sum,0
+shop_other,type_sum,0
+shop_other,source_sum,0
+brand_other,type_sum,0
+brand_other,source_sum,0
