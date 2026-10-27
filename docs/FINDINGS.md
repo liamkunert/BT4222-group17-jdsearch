@@ -281,6 +281,7 @@ Evidence: `notebooks/05_models.ipynb`, results in `docs/experiment_results.csv`.
 | Random order | 0.084 | | E13 |
 | Lagged history popularity (single signal) | 0.337 | | E13 |
 | LambdaMART base: query length, relevance, lagged popularity (G0 + G1 + G2a) | 0.347 | +0.0096 [0.0076, 0.0114] | E14 |
+| Untrained rule: own products first (history count), then lagged popularity | 0.373 | +0.036 [0.033, 0.038] | E17 |
 | Full base: + same-day popularity (G2b; not deployable) | 0.366 | +0.028 (vs base +0.0185 [0.0164, 0.0206]) | E15 |
 | Deployable full model: all groups except G2b (94 features) | 0.389 | +0.052 (vs base +0.042 [0.040, 0.045]) | E16 |
 
@@ -289,4 +290,5 @@ Evidence: `notebooks/05_models.ipynb`, results in `docs/experiment_results.csv`.
 3. **Memory is not a constraint on the dev subsample**: all 97 features with a LightGBM dataset and the validation features peak at 2.8 GB. All training searches would be about 11.3M rows (4.4 GB as float32).
 4. **Same-day information is worth much more inside a model than as a single signal** (E15): lagging history popularity by a day costs 0.004 as a sort key, but the same-day signals add +0.0185 to the trained base, and the trees prefer unlagged over lagged popularity (71% vs 2% of the split gain). A deployed ranker cannot use this; the full base is an optimistic reference only.
 5. **Personal history and context add about +0.04 to the deployable base** (E16), about twice as much for shoppers active in the last 7 days (+0.045 vs +0.021), and also in long lists where relevance did not help (+0.040). Pooled exact-product history takes most of the history split gain; which groups matter is left to the ablations. Clamped searches would inflate the gain to +0.058.
-6. **More training data still helps at the dev size** (E16): 20k to 33.8k fit searches +0.0041 [0.0028, 0.0053] (10k to 20k +0.0012, n.s.; one seed, uneven steps). Final models therefore need features for all training searches.
+6. **About 70% of the personal gain is the obvious step, about 30% is learned** (E17): an untrained rule "products from the shopper's history first, then lagged popularity" reaches 0.373; the trained deployable model adds +0.016 [0.014, 0.018] beyond it, in searches without an own product among the candidates (+0.017, relevance plus shop/brand/category evidence and context) as well as in those with one (+0.013). On the clamped searches rule and model are equal (0.699 vs 0.700): their exact matches are post-search actions.
+7. **More training data still helps at the dev size** (E16): 20k to 33.8k fit searches +0.0041 [0.0028, 0.0053] (10k to 20k +0.0012, n.s.; one seed, uneven steps). Final models therefore need features for all training searches.
