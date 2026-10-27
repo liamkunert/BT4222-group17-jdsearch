@@ -26,6 +26,15 @@ This log records only meaningful AI-assisted technical decisions that may be use
 
 ## Entries
 
+### 2026-10-27 - Independent AI review of the model plan (DRAFT: member to review)
+
+- **Member:** Liam Kunert
+- **Related work:** `PROJECT_PLAN.md` section 5 (`05_models`)
+- **Objective:** Choose models that fit our data and findings, cover lecture topics sensibly and fit 13 days.
+- **AI contribution:** An external LLM reviewed our proposal (LambdaMART, collaborative features, neural attention) and gave concrete formulations and stop rules.
+- **Critical evaluation:** Accepted: GCN, full Transformer and stacking dropped; cross-fitted lagged CF graph; feature MLP as neural control; popularity residual. Adjusted: ablations on the 40k subsample (memory); LightGBM's NDCG for early stopping, our evaluator for final comparisons.
+- **Final action and validation:** Plan rewritten with success criteria and time boxes.
+
 ### 2026-10-26 - Two independent AI data-generation audits
 
 - **Member:** Liam Kunert
