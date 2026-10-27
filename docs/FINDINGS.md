@@ -281,7 +281,12 @@ Evidence: `notebooks/05_models.ipynb`, results in `docs/experiment_results.csv`.
 | Random order | 0.084 | | E13 |
 | Lagged history popularity (single signal) | 0.337 | | E13 |
 | LambdaMART base: query length, relevance, lagged popularity (G0 + G1 + G2a) | 0.347 | +0.0096 [0.0076, 0.0114] | E14 |
+| Full base: + same-day popularity (G2b; not deployable) | 0.366 | +0.028 (vs base +0.0185 [0.0164, 0.0206]) | E15 |
+| Deployable full model: all groups except G2b (94 features) | 0.389 | +0.052 (vs base +0.042 [0.040, 0.045]) | E16 |
 
 1. **Relevance adds about 0.01 on top of deployable popularity once a model combines them**, although BM25 alone scores only 0.093 (E09). The gain is concentrated in lists of up to 84 candidates (+0.02); in lists of more than 95 candidates the base is not distinguishable from popularity. Lagged popularity has 86% of the split gain, BM25 9%.
 2. **The deployable base (0.347) is the reference for personalisation**: history features are judged by what they add to it, not to the single popularity signal.
 3. **Memory is not a constraint on the dev subsample**: all 97 features with a LightGBM dataset and the validation features peak at 2.8 GB. All training searches would be about 11.3M rows (4.4 GB as float32).
+4. **Same-day information is worth much more inside a model than as a single signal** (E15): lagging history popularity by a day costs 0.004 as a sort key, but the same-day signals add +0.0185 to the trained base, and the trees prefer unlagged over lagged popularity (71% vs 2% of the split gain). A deployed ranker cannot use this; the full base is an optimistic reference only.
+5. **Personal history and context add about +0.04 to the deployable base** (E16), about twice as much for shoppers active in the last 7 days (+0.045 vs +0.021), and also in long lists where relevance did not help (+0.040). Pooled exact-product history takes most of the history split gain; which groups matter is left to the ablations. Clamped searches would inflate the gain to +0.058.
+6. **More training data still helps at the dev size** (E16): 20k to 33.8k fit searches +0.0041 [0.0028, 0.0053] (10k to 20k +0.0012, n.s.; one seed, uneven steps). Final models therefore need features for all training searches.
