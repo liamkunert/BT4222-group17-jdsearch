@@ -301,5 +301,24 @@ Evidence: `notebooks/05_models.ipynb`, results in `docs/experiment_results.csv`.
 7. **Pooled history is enough; type and age splits add nothing** (E18): four pooled match counts (exact product, shop and brand via other products, L3 path) give +0.041 over the base, almost the full model's +0.042. Splitting them by action type (0.0000) or by type and window (+0.0001) does not help, also not with the pooled totals added back or for inactive shoppers. All other groups together add about +0.002. Single-signal age effects (E03) do not become model gains. To be re-checked with all training data (finer splits may need more data).
 8. **Action type matters at most a little once age is fixed** (E19): within the last 7 days, where all types are observed, type adds +0.0019 [0.0009, 0.0030], below our +0.003 threshold. **Older history does matter** (post-hoc): all ages pooled beat the last 7 days pooled by +0.012 [0.010, 0.013], +0.019 for shoppers without recent activity. Business reading: use all of a shopper's history, but what counts is *whether and how often* they touched the product, shop, brand or category, not how or when.
 9. **Nothing else adds to pooled history** (E20): match recency, metadata coverage, history volume and session context, time since the last action, query-history overlap and search-linked vs query-less history, each added to base + pooled history, change NDCG@10 by -0.0013 to +0.0002 (all six together +0.0006 [-0.0006, 0.0018]); time since the last action alone slightly hurts (-0.0013 [-0.0024, -0.0001]). The working LambdaMART is base + pooled history (14 inputs, 0.388). Search-level inputs only act through interactions; the trees find none that generalise.
-10. **Item-item CF adds at most a little** (E22): similarities from other shoppers' histories (lagged, cross-fitted graph) add +0.0019 [0.0006, 0.0031] to pooled history, below our threshold. The links are sparse: 15-19% of candidates are in the graph, but only 2-3% have a similar product in the shopper's history (9% of engaged training candidates).
-11. **More training data still helps at the dev size** (E16): 20k to 33.8k fit searches +0.0041 [0.0028, 0.0053] (10k to 20k +0.0012, n.s.; one seed, uneven steps). Final models therefore need features for all training searches.
+10. **Item-item CF adds a little** (E22, screening): similarities from other shoppers' histories (lagged, cross-fitted graph) add +0.0019 [0.0006, 0.0031] to pooled history on the dev subsample. The links are sparse: 15-19% of candidates are in the graph, but only 2-3% have a similar product in the shopper's history (9% of engaged training candidates). With all training data the gain reaches +0.0031 (below).
+11. **The learning curve overstated the value of more data** (E16, E23): 20k to 33.8k fit searches gave +0.0041 [0.0028, 0.0053], but all 122k searches add only +0.0008 to +0.0029 over the dev-trained models. Single training samples per size and early stopping make such steps noisy.
+
+### Final runs on all training searches (E23): numbers for the report
+
+All 121,989 clean training searches (dev subsample plus `train_rest`, built on Colab in E21), same inner early-stopping set and configuration; `validation_clean`, 18,844 searches; paired differences with 95% bootstrap intervals.
+
+| Model | NDCG@10 | Paired difference |
+|---|---:|---|
+| Random order | 0.084 | |
+| Team 3, re-implemented on our protocol (E11) | 0.151 | |
+| Lagged history popularity (untrained) | 0.337 | |
+| Deployable base: query length, relevance, lagged popularity | 0.350 | vs popularity +0.0125 [0.0107, 0.0144] |
+| Rule: own products first, then popularity (untrained, E17) | 0.373 | |
+| **M1: base + pooled history** | **0.389** | vs base +0.0387 [0.0360, 0.0415]; vs rule +0.0154 |
+| M3: base + history by type and window | 0.390 | vs M1 +0.0013 [0.0002, 0.0025] |
+| Deployable full model (94 inputs) | 0.391 | vs M1 +0.0019 [0.0008, 0.0030] |
+| **M1 + item-item CF** | **0.392** | vs M1 +0.0031 [0.0020, 0.0043] |
+
+- The screening conclusions hold: pooled history carries the personal gain (+0.042 for shoppers active in the last 7 days, +0.018 for the others); type and window splits and all other groups stay below the threshold.
+- CF meets the decision rule by a hair (+0.00308 against +0.003), so other shoppers' patterns add a small gain once the model is trained on all data. On all validation searches (including clamped ones): M1 0.403, M1 + CF 0.406.
