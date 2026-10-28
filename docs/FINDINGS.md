@@ -322,3 +322,4 @@ All 121,989 clean training searches (dev subsample plus `train_rest`, built on C
 
 - The screening conclusions hold: pooled history carries the personal gain (+0.042 for shoppers active in the last 7 days, +0.018 for the others); type and window splits and all other groups stay below the threshold.
 - CF meets the decision rule by a hair (+0.00308 against +0.003), so other shoppers' patterns add a small gain once the model is trained on all data. On all validation searches (including clamped ones): M1 0.403, M1 + CF 0.406.
+- **Final LambdaMART: M1 + CF** (19 inputs: query length, eight relevance features, lagged popularity, four pooled history counts, five CF features), chosen by the pre-registered rule; M1 is reported alongside, since the CF gain sits at the threshold.
