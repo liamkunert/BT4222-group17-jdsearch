@@ -26,6 +26,15 @@ This log records only meaningful AI-assisted technical decisions that may be use
 
 ## Entries
 
+### 2026-10-29 - Two independent AI reviews of the LambdaMART phase
+
+- **Member:** Liam Kunert
+- **Related work:** E25-E26, E30, `docs/FINDINGS.md` section 11
+- **Objective:** Check E14-E24 for leakage, evaluation problems and overclaims before the neural models and the report.
+- **AI contribution:** A Claude subagent (training data only) and an external LLM reviewed code, saved outputs and conclusions; the subagent proposed a fairer comparison rule and found possible post-search actions in 2-5 s final gaps.
+- **Critical evaluation:** No critical issue; both confirmed the pipeline. Accepted after verifying them here: overclaims ("adds nothing", the 70/30 split, the E24 reading, CF robustness) and the near-clamp leak. Minor points deferred to one pass.
+- **Final action and validation:** Four checks (E30): CF not robust across seeds, fairer rule reaches 88% of the gain, short gaps reported as sensitivity; wording corrected. DRAFT: member to review.
+
 ### 2026-10-27 - Independent AI review of the model plan
 
 - **Member:** Liam Kunert
