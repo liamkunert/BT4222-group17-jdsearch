@@ -6,7 +6,7 @@ Meaningful AI-assisted technical decisions are recorded concisely in [AI_LOG.md]
 
 ## Project status
 
-Interim report submitted; modelling complete (LambdaMART, item-item collaborative features, feature MLP and history attention); diagnostics, the test run and the final report follow. All results are in [docs/FINDINGS.md](docs/FINDINGS.md) (trained rankers in section 11), including the post-interim finding that each action type is only recorded within its own window (clicks 7 days, carts 90 days, orders 1 year). Every post-interim experiment is recorded in [docs/EXPERIMENT_LOG.md](docs/EXPERIMENT_LOG.md); the remaining steps are in [PROJECT_PLAN.md](PROJECT_PLAN.md) section 9.
+Interim report submitted; modelling and diagnostics complete (LambdaMART, item-item collaborative features, feature MLP and history attention; diagnostics in 06); the final review fixes, the test run and the final report follow. All results are in [docs/FINDINGS.md](docs/FINDINGS.md) (trained rankers in section 11), including the post-interim finding that each action type is only recorded within its own window (clicks 7 days, carts 90 days, orders 1 year). Every post-interim experiment is recorded in [docs/EXPERIMENT_LOG.md](docs/EXPERIMENT_LOG.md); the remaining steps are in [PROJECT_PLAN.md](PROJECT_PLAN.md) section 9.
 
 ## Repository structure
 
