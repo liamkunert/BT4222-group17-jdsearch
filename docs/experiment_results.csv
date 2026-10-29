@@ -81,3 +81,5 @@ date,experiment,model,split,searches,ndcg_at_10,ndcg_ci_low,ndcg_ci_high,recall_
 2026-10-29,E27,feature MLP,validation,19772,0.40196,0.39679,0.40706,0.58579,0.40501,d033947,"05b_neural on Colab (cuda), 121,989 fit searches, best epoch 4, inputs as the final LambdaMART"
 2026-10-29,E28,history attention v1,validation_clean,18844,0.37948,0.37442,0.38447,0.56405,0.38245,d033947,"05b_neural on Colab (cuda), 121,989 fit searches, best epoch 1, inputs as the final LambdaMART"
 2026-10-29,E28,history attention v1,validation,19772,0.39031,0.38528,0.39522,0.57546,0.39098,d033947,"05b_neural on Colab (cuda), 121,989 fit searches, best epoch 1, inputs as the final LambdaMART"
+2026-10-29,E29,history attention v2 (no product IDs),validation_clean,18844,0.38161,0.37659,0.38669,0.56592,0.38533,52e52cb,"05b_neural on Colab (cuda), 121,989 fit searches, best epoch 2, inputs as the final LambdaMART"
+2026-10-29,E29,history attention v2 (no product IDs),validation,19772,0.39355,0.38893,0.39847,0.57761,0.39517,52e52cb,"05b_neural on Colab (cuda), 121,989 fit searches, best epoch 2, inputs as the final LambdaMART"
