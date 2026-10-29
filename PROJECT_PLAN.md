@@ -112,7 +112,7 @@ Every implementation, change and new finding is documented, so the work stays tr
 | 29 Oct | Finalists retrained on all training searches (LambdaMART) |
 | 30 Oct | Robustness rebuild (10-minute history gap) and retrain; data preparation for the neural models |
 | 31 Oct-3 Nov | Feature MLP, then history attention (Colab), one configuration each |
-| 4-5 Nov | Diagnostics (06), figures for the report |
+| 4-5 Nov | Diagnostics (06), figures for the report; review fixes deferred from E25 (wording, cache robustness, fairer rule, final-gap sensitivity, three seeds for M1 and M1 + CF, full-data "M1 + all six") |
 | 6 Nov | Buffer; independent review of the final results |
 | 7 Nov | Freeze configurations, one test run |
 | 8 Nov | Reproducibility check on Colab, documentation |
