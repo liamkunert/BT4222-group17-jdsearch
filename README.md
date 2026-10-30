@@ -6,7 +6,7 @@ Meaningful AI-assisted technical decisions are recorded concisely in [AI_LOG.md]
 
 ## Project status
 
-Interim report submitted; modelling phase started. All exploration results are in [docs/FINDINGS.md](docs/FINDINGS.md), including the post-interim finding that each action type is only recorded within its own window (clicks 7 days, carts 90 days, orders 1 year). Every experiment from here on is recorded in [docs/EXPERIMENT_LOG.md](docs/EXPERIMENT_LOG.md).
+Interim report submitted; modelling complete (LambdaMART, item-item collaborative features, feature MLP and history attention); diagnostics, the test run and the final report follow. All results are in [docs/FINDINGS.md](docs/FINDINGS.md) (trained rankers in section 11), including the post-interim finding that each action type is only recorded within its own window (clicks 7 days, carts 90 days, orders 1 year). Every post-interim experiment is recorded in [docs/EXPERIMENT_LOG.md](docs/EXPERIMENT_LOG.md); the remaining steps are in [PROJECT_PLAN.md](PROJECT_PLAN.md) section 9.
 
 ## Repository structure
 
@@ -30,6 +30,8 @@ notebooks/
   04_baselines.ipynb             Simple untrained references on validation; Team 3's evaluation protocol
   04b_team3_prep.ipynb           Inputs for the Team 3 correction ladder (CPU)
   04c_team3_ladder.ipynb         Team 3's model re-implemented and corrected step by step (GPU, Colab)
+  05_models.ipynb                LambdaMART: base, ablations, CF features, full-data finalists, robustness, review checks
+  05b_neural.ipynb               Neural rankers: feature MLP and history attention (GPU, Colab)
   exploration/                   Supporting analyses, not part of the pipeline (see its README)
 scripts/                         Analysis modules used by the notebooks
 outputs/                         Generated tables and figures by stage (ignored by Git)
@@ -84,6 +86,8 @@ In VS Code, select the project's `.venv` as the notebook kernel.
 - `03_features.ipynb`: builds feature set v3 (97 features in 13 groups; popularity from training records only, including a deployable version lagged by one day) for the training dev subsample and validation; writes `data/processed/features_v3_*.parquet` and `features_v3_meta.json`. About 25 minutes; needs notebook 02 first. Searches with a clamped 1-second final gap (post-search actions in the history) are flagged in `search_table.parquet` and excluded from training and the main evaluation (E12-E13). In Colab, outputs under `data/processed/` disappear with the runtime unless copied to Drive.
 - `04_baselines.ipynb`: untrained single-signal references (random, relevance, popularity, personal history) on validation, overall and by segment; logs E09 to the results registry. A few minutes; needs notebook 03 first.
 - `04b_team3_prep.ipynb` and `04c_team3_ladder.ipynb`: Team 3's model re-implemented and corrected one flaw at a time (E11). Run 04b locally (about 7 minutes, writes `data/processed/team3/`), copy that folder to `MyDrive/BT4222 Group Project/processed/team3/`, then run 04c on a Colab T4 GPU (instructions at its top). Without a GPU, 04c runs a short smoke test.
+- `05_models.ipynb`: LightGBM LambdaRank rankers on feature set v3 (E14-E26, E30): screening and ablations on the clean training dev searches with early stopping on an inner 10%, item-item collaborative features from a cross-fitted, lagged graph, the finalists retrained on all training searches, the 10-minute robustness check and the checks from the independent reviews; everything compared paired on `validation_clean`. Needs notebooks 02 and 03 first (03 for all splits including `train_rest`, and once more with `MIN_AGE_DAYS` = 10 minutes for E24). Trained models are cached under `data/processed/models/` (local only); without the cache every model is retrained, and the full-data sections alone took over an hour locally. It also exports the LambdaMART validation scores for 05b and evaluates and logs the neural results (section 15). On Colab, copy the processed files listed at its top to `MyDrive/BT4222 Group Project/processed/`.
+- `05b_neural.ipynb`: feature MLP and history attention with a listwise ranking loss (E27-E29, E31), trained on all clean training searches on a Colab T4 GPU (without a GPU it runs a short smoke test); writes validation scores and training histories to `processed/neural/`, which 05 section 15 evaluates.
 - `exploration/`: query and history validation notebooks, the session-context check, the post-interim history timeline and the first team EDA. Their purpose and run order are in [notebooks/exploration/README.md](notebooks/exploration/README.md).
 
 **Working conventions (post-interim).** All analysis, modelling and evaluation code lives in Jupyter notebooks, executed with outputs saved, because the pipeline is run and submitted on Colab. Only a few functions shared by several notebooks (parsing, evaluation) live in `scripts/` and are imported. Every experiment gets an entry in [docs/EXPERIMENT_LOG.md](docs/EXPERIMENT_LOG.md); results that change what we believe also go into FINDINGS, and changes of direction into PROJECT_PLAN.
