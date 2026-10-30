@@ -1,6 +1,6 @@
 # Group 17 — JDSearch Project Plan
 
-Status: interim report submitted (source in `reports/interim/`). Modelling is complete: LambdaMART screening and ablations (E14-E22), full-data finalists (E23), robustness (E24), the independent reviews with their checks and corrections (E25, E26, E30) and the neural models (E27-E29, regularised attention E31). Diagnostics are done (06, E32). Remaining: final independent review, one test run, Colab reproducibility run, report and slides (section 9).
+Status: interim report submitted (source in `reports/interim/`). Modelling is complete: LambdaMART screening and ablations (E14-E22), full-data finalists (E23), robustness (E24), the independent reviews with their checks and corrections (E25, E26, E30) and the neural models (E27-E29, regularised attention E31). Diagnostics (06, E32) and the final independent reviews with their fixes (E33) are done. Remaining: a self-contained submission pipeline, run once end to end on Colab including the single test run, then report and slides (section 9).
 
 Evidence and detailed results are in [docs/FINDINGS.md](docs/FINDINGS.md), every experiment in [docs/EXPERIMENT_LOG.md](docs/EXPERIMENT_LOG.md); this file holds direction, decisions and the remaining steps.
 
@@ -71,7 +71,7 @@ Pipeline notebooks continue the numbering in `notebooks/`. Each step ends with e
    - **Result (E23, E30):** base 0.350, M1 0.389, M3 0.390, M1 + all six 0.391, full 0.391, M1 + CF 0.392 (vs M1 +0.0031 [0.0020, 0.0043], just meets the rule in the deterministic run, but +0.0004 to +0.0017 across three seeds). More data added only +0.001 to +0.003. Report numbers in FINDINGS 11. **Final LambdaMART: M1 + CF** (by the pre-registered rule), with **M1 as an equal co-headline** because the CF gain is not robust. The feature MLP uses the same inputs.
    - **Scope narrowed:** CF closed after one cycle; neural models with one fixed configuration each; one robustness setting; diagnostics limited to the segments below. Reason: the main question has a clear answer (pooled history carries the personal gain), and the remaining time goes to confirming it on all training data and to the report.
 5. **`06_diagnostics`:** NDCG by segment (activity in the last 7 days or not, history length, list length, whether a candidate is already in the shopper's history, final gap), cold vs warm candidates, a few figures for the report, business insights; no training and no new models (window weights dropped after E18). History ages around day 64-66 before the search (logging outage) and sales days (Double 11, 618) are not interpreted per day. **Done (E32, wording corrected in E33):** 92% of the net personal gain comes from the 27% of searches whose list contains one of the shopper's own products; there, other engaged products lose 1.8 points of top-10 probability, far outweighed by the own-product gain; cold products (31% of engaged candidates) rarely reach the top 10 under any ranking and are about half of the engaged candidates M1 misses. Five report figures in `outputs/diagnostics/`.
-6. **Test run:** after the final review, configurations are frozen and the finalists, fixed in a list before the run, are scored once on the 20,000 test searches. Nothing is changed or selected on the test result.
+6. **Test run:** after the final review, configurations are frozen and the finalists, fixed in a list before the run, are scored once on the 20,000 test searches, as the last notebook of the submission pipeline's single Colab run (section 9). Nothing is changed or selected on the test result.
 
 ## 6. Sampling and splits (decided after the interim)
 
@@ -108,9 +108,9 @@ Every implementation, change and new finding is documented, so the work stays tr
 In this order; each ends with its experiment-log entry and, where it changes a belief or the plan, FINDINGS and this file.
 
 1. **Diagnostics (`06_diagnostics`, done, E32):** segments, own-history, warm and cold candidates and figures for the report (section 5, step 5); reads saved validation scores only.
-2. **Final independent review** of the final results (a Claude subagent and an external LLM, cross-checked), then the agreed fixes.
-3. **Freeze and test run:** configurations frozen, the list of finalists fixed, one scoring run on test (section 5, step 6).
-4. **Reproducibility run on Colab:** all pipeline notebooks re-run from the repository; the E31 registry row is logged when 05 runs (section 15).
+2. **Final independent review (done, E33):** a Claude subagent and an external LLM, cross-checked; wording fixes and the 06 displacement section applied.
+3. **Submission pipeline:** a separate, self-contained repository with only the pipeline (stage-numbered notebooks 01-07 incl. our Team 3 re-implementation, `scripts/` helpers, pinned versions, one path setting, run instructions and the Drive data link; development logs stay in this repository and are linked). It closes the reproducibility gaps of E33 (one branch, the E24 rebuild as a switch, saved neural weights and CF graph, CF features for test) and adds `07_test`. Design agreed with Liam before building.
+4. **One Colab run of the whole pipeline, including the single test run:** `07_test` first re-scores validation with the models of this run and checks them against the reported numbers (tolerances fixed in advance), then scores test once. Test list, fixed in E34 before the run: random, lagged popularity, base, the rule, M1, M1 + CF, feature MLP, regularised attention; supporting: M3, M1 + all six, the full model. Nothing is changed or selected on the test result.
 5. **Deliverables:** code and data artefacts on GitHub with a PDF of links on Canvas; report and slides; presentation and peer evaluation (course deadlines on Canvas); final consultation with the lecturer in week 11.
 
 ## 10. Key terms
