@@ -26,6 +26,15 @@ This log records only meaningful AI-assisted technical decisions that may be use
 
 ## Entries
 
+### 2026-10-30 - Two independent AI reviews of the final results
+
+- **Member:** Liam Kunert
+- **Related work:** E33, `docs/FINDINGS.md` section 11, `notebooks/06_diagnostics.ipynb`
+- **Objective:** Check the final results, diagnostics and conclusions before the single test run.
+- **AI contribution:** A Claude subagent (no test data) and an external LLM reviewed code, outputs and claims; both found no leakage, flagged overclaims and the missing test-scoring path.
+- **Critical evaluation:** Re-computed the disputed numbers before accepting them: displacement within own-product searches (-1.8 points), cold products half of the missed engagement, E30 mixing subsampling with seeds. Rejected nothing material; kept the pre-registered final model.
+- **Final action and validation:** Claims reworded, 06 extended and re-run on Colab; test run moved into one reproducible Colab pipeline. DRAFT: member to review.
+
 ### 2026-10-29 - Two independent AI reviews of the LambdaMART phase
 
 - **Member:** Liam Kunert
