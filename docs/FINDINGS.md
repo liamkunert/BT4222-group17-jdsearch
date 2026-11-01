@@ -13,7 +13,7 @@ What our exploration established, and what each result means for the pipeline. T
 | Signals by window and type, context lead re-check, leakage and re-finds (sections 6-7) | `notebooks/exploration/window_recheck.ipynb` |
 | First team EDA (superseded, kept for reference) | `notebooks/exploration/early_eda.ipynb` |
 
-Last updated 25 October 2026 (section 7 added after the interim feedback; section 6 revised by the window re-check; wording in sections 5-7 tightened after an independent review, E06; section 8 revised with feature set v2, E08); section 11 (trained rankers) added 27 October 2026, E14.
+Last updated 25 October 2026 (section 7 added after the interim feedback; section 6 revised by the window re-check; wording in sections 5-7 tightened after an independent review, E06; section 8 revised with feature set v2, E08); section 11 (trained rankers) added 27 October 2026, E14; the submission run and the single test run (E34) added to sections 5 and 11 on 1 November 2026.
 
 ## 1. Scope conventions
 
@@ -120,6 +120,7 @@ Reviewed 4 October 2026 from [their repository](https://github.com/myathetchai/b
 - Code and design fixes add little on this architecture (+0.035 from R0b to R4).
 - Even with our relevance and popularity features the model stays below sorting by popularity alone (-0.044 [-0.048, -0.041]).
 - One seed; small steps (R3, R4) are within typical seed variance.
+- **Submission run (E34; same code, one seed):** R0 **0.183** (R0b 0.116, R1 0.159, R2 0.142, R3 0.142, R4 0.148, R5 0.298), every rung except R0 within 0.004 of the table above. The leak is then about two thirds of R0's gain over random (-0.067 [-0.071, -0.063] of +0.098), and on their protocol R0 scores 0.540, about random order (0.532), instead of below it. R0's +0.032 shows how much one seed moves this model. **The report quotes the submission run** (0.183, R5 0.298 against popularity 0.341).
 
 **Splits**
 
@@ -314,7 +315,7 @@ Evidence: `notebooks/05_models.ipynb`, results in `docs/experiment_results.csv`.
 | Model | NDCG@10 | Paired difference |
 |---|---:|---|
 | Random order | 0.084 | |
-| Team 3 as published (R0), re-implemented on our protocol (E11; all 19,772 validation searches, dev training) | 0.151 | |
+| Team 3 as published (R0), re-implemented on our protocol (E11; all 19,772 validation searches, dev training) | 0.151 | submission run (E34): 0.183 |
 | Lagged history popularity (untrained) | 0.337 | |
 | Deployable base: query length, relevance, lagged popularity | 0.350 | vs popularity +0.0125 [0.0107, 0.0144] |
 | Rule: own products first, then popularity (untrained, E17) | 0.373 | |
@@ -335,3 +336,36 @@ Evidence: `notebooks/05_models.ipynb`, results in `docs/experiment_results.csv`.
 - **CF graph size (E26):** training rows use fold graphs (two thirds of the training searches), validation the full graph; re-scoring validation with fold-graph CF features changes the final model by at most 0.0008, but moves CF's gain over M1 to +0.0026-0.0028, i.e. just below the threshold. CF is a gain right at the threshold, not a robust one.
 - **Neural rankers (E27-E31, Colab, all training searches; one seed and one fixed configuration per model; wording corrected in E33):** a feature MLP on the 19 inputs of M1 + CF reaches 0.389: about equal to M1 (+0.0002, 14 inputs) and slightly below LambdaMART with the same inputs (M1 + CF, -0.0028 [-0.0044, -0.0012]). The tested MLP therefore does not beat the trees; whether it fails to use the CF inputs is untested (no MLP without CF), and model-family independence is not shown. History attention over the last 50 events with learned ID embeddings reaches only 0.380 (-0.0095 vs the MLP) and overfits after one epoch; our hypothesis is that its candidate ID embeddings, trained on same-day labels, act as a learned same-day engagement rate. The one debugging cycle (E29: no product IDs, no direct candidate input; candidate shop and brand embeddings still enter through the candidate-history interaction) reaches 0.382, -0.0073 [-0.0090, -0.0056] below the MLP and still overfitting. One pre-registered regularised run (E31: 16-d embeddings, embedding dropout, weight decay on the embeddings) removes most of the overfitting (inner NDCG flat instead of falling) and reaches 0.387, +0.0051 over E29 and -0.0023 [-0.0035, -0.0010] below the MLP, a gap below our 0.003 threshold. None of the tested attention configurations improves on the MLP; regularisation helped more than removing product IDs, so the memorisation mechanism remains a hypothesis.
 - **Final LambdaMART: M1 + CF** (19 inputs: query length, eight relevance features, lagged popularity, four pooled history counts, five CF features), chosen by the pre-registered rule; **M1 is an equal co-headline**, because the CF gain is not robust (point 10).
+
+### Single test run (E34): the final numbers
+
+One end-to-end Colab run of the [submission pipeline](https://github.com/liamkunert/BT4222-group17-jdsearch-submission) (notebooks 01-07; every file in the public [Drive folder](https://drive.google.com/drive/folders/1PGXci7tvDOh4Wh2HX0VPUO5cl_pAJNSN)). Notebook 07 first checked that this run reproduces every reported `validation_clean` number (all eleven models to four decimals), then evaluated the test set once. `test_clean`: 18,818 searches (of 19,762 test searches with an engaged candidate); paired differences with 95% bootstrap intervals.
+
+| Ranking | Validation | Test | Test, all searches |
+|---|---:|---:|---:|
+| Random order | 0.084 | 0.084 | 0.084 |
+| Lagged history popularity | 0.337 | 0.338 | 0.338 |
+| LambdaMART base | 0.350 | 0.350 | 0.351 |
+| Rule: own products first, then the base | 0.384 | 0.382 | 0.398 |
+| **M1: base + pooled history** | 0.389 | **0.385** | 0.400 |
+| M3: history by type and window | 0.390 | 0.388 | 0.403 |
+| M1 + all six groups | 0.391 | 0.388 | 0.404 |
+| Deployable full model | 0.391 | 0.388 | 0.404 |
+| **M1 + CF (final LambdaMART)** | 0.392 | **0.389** | 0.404 |
+| Feature MLP | 0.389 | 0.387 | 0.401 |
+| History attention v3 (regularised) | 0.387 | 0.386 | 0.400 |
+
+| Paired difference on test | Difference [95% interval] |
+|---|---|
+| M1 - base | +0.036 [0.033, 0.038]; final gap over 30 s +0.031 [0.028, 0.033] |
+| M1 - rule | +0.0031 [0.0015, 0.0045] |
+| M1 + CF - M1 | +0.0036 [0.0024, 0.0047] |
+| MLP - M1 + CF | -0.0023 [-0.0038, -0.0009] |
+| Attention v3 - MLP | -0.0007 [-0.0020, 0.0007] |
+| Base - lagged popularity | +0.012 [0.010, 0.014] |
+| M3 / M1 + all six / full - M1 | +0.0022 / +0.0025 / +0.0028 (each below +0.003) |
+
+- **Test confirms validation:** every ranking is within 0.0034 of its validation value, and the reading is unchanged: pooled history carries the personal gain (+0.036 on test), most of it the untrained rule, and the neural models do not beat the trees.
+- **Two details differ:** M1 falls just below the MLP and attention v3 (0.3854 vs 0.3866 and 0.3859, not compared paired), and **CF meets the +0.003 rule on test** (+0.0036). Together with point 10: CF is a small gain that clears the threshold in the deterministic configuration on both validation (+0.0031) and test, but is sensitive to feature subsampling (mean +0.0008 over three seeds).
+- **Validation numbers of this run** match the development run for every finalist; Team 3's R0 (0.183, section 5) and attention v1 and v2 (0.3815 and 0.3810) moved within one-seed training variance. The report uses this run's numbers throughout.
+- Sensitivity populations were reported only in part (final gap over 30 s only for M1 - base; all test searches only per model, without paired contrasts), a limitation stated in the report.
